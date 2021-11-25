@@ -3,7 +3,7 @@ use rbatis::crud_table;
 #[crud_table]
 #[derive(Clone, Debug)]
 pub struct Asset {
-    pub id: Option<String>,
+    pub id: Option<u64>,
     pub asset: Option<String>,
     pub issuance_program: Option<String>,
     pub definition: Option<String>,

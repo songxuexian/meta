@@ -1,13 +1,15 @@
+pub mod connect;
+pub mod tx;
+
 use rbatis::crud::CRUD;
-use rbatis::rbatis::Rbatis;
 use meta_database::block::Block;
 use tokio::test;
+use crate::connect::connect_db;
 
 #[tokio::test]
 pub async fn test_postgres_uuid() {
     fast_log::init_log("requests.log", 1000, log::Level::Info, None, true);
-    let rb = Rbatis::new();
-    rb.link("mysql://bytom_dev:Bytom!Dev@rm-uf6k0307eqv8pb7hd1o.mysql.rds.aliyuncs.com:3306/blockcenter_bytom2.0").await.unwrap();
+    let rb = connect_db().await;
 
     // let uuid = Uuid::from_str("df07fea2-b819-4e05-b86d-dfc15a5f52a9").unwrap();
     //create table

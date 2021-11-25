@@ -4,12 +4,12 @@ use serde::{Serialize, Deserialize};
 // pre-define tx types
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum UTXOType {
-    // OrdinaryType represent ordinary utxo type
-    OrdinaryType(u8),
-    // CoinbaseType represent is coinbase uxto type
-    CoinbaseType(u8),
-    // VoteType represent vote utxo type
-    VoteType(u8),
+    // OrdinaryType represent ordinary type
+    OrdinaryType,
+    // CoinbaseType represent is coinbase type
+    CoinbaseType,
+    // VoteType represent vote type
+    VoteType,
 }
 
 
@@ -23,7 +23,7 @@ pub struct Utxo {
     pub block_height: Option<u64>,
     pub valid_height: Option<u64>,
     pub is_spend: Option<bool>,
-    pub utxo_type: Option<UTXOType>,
+    pub r#type: Option<UTXOType>,
     pub amount: Option<u64>,
     pub raw_data: Option<String>,
     pub control_program: Option<String>,

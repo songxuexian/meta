@@ -9,6 +9,7 @@ edition = "2021"
 # bson2 (required)
 serde = { version = "1", features = ["derive"] }
 bson2 = "2.0"
+serde_repr = "0.1"
 
 # logging lib(required)
 log = "0.4"
