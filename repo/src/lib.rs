@@ -1,5 +1,6 @@
 pub mod connect;
 pub mod tx;
+mod errors;
 
 use rbatis::crud::CRUD;
 use meta_database::block::Block;
