@@ -1,5 +1,4 @@
 use rbatis::crud_table;
-use serde::{Serialize, Deserialize};
 use serde_repr::*;
 
 #[crud_table]
