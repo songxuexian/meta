@@ -44,5 +44,18 @@ pub trait ChainBlock {
     fn transactions_merkle_root(&self) -> String;
     fn timestamp(&self) -> i64;
     // todo need to change () to real type
-    fn transactions(&self) -> Vec<()>;
+    fn transactions(&self) -> Vec<Box<dyn ChainTx>>;
+}
+
+pub trait ChainTx {
+    fn inputs(&self) -> Vec<Box<dyn Input>>;
+    fn outputs(&self) -> Vec<Box<dyn Output>>;
+}
+
+pub trait Input {
+    fn control_program(&self) -> String;
+}
+
+pub trait Output {
+    fn control_program(&self) -> String;
 }

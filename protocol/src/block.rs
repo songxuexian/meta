@@ -8,7 +8,7 @@ pub struct Block {
     // key = asset hash
     assets: HashMap<String, Asset>,
     // key  = control program
-    addresses: HashMap<String, Address>,
+    pub addresses: HashMap<String, Address>,
     transactions: Vec<Transaction>,
     utxos: Vec<UTXO>,
     spend_utxo_hashes: Vec<String>,
@@ -16,9 +16,9 @@ pub struct Block {
     balance: HashMap<String, Balance>, // key = asset + address
 }
 
-struct Address {
-    script: String,
-    address: String,
+pub struct Address {
+    pub script: String,
+    pub address: String,
 }
 
 struct Asset {
