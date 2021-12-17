@@ -1094,6 +1094,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "meta-protocol"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "meta-database",
+ "thiserror",
+]
+
+[[package]]
 name = "meta-repo"
 version = "0.1.0"
 dependencies = [
