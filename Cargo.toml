@@ -2,13 +2,6 @@
 members = [
     "database",
     "repo",
-<<<<<<< Updated upstream
-    "protocol",
-=======
-<<<<<<< Updated upstream
-=======
     "protocol",
     "node",
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 ]

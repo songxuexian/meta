@@ -1440,10 +1440,6 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-=======
 name = "meta-node"
 version = "0.1.0"
 dependencies = [
@@ -1457,7 +1453,6 @@ dependencies = [
 ]
 
 [[package]]
->>>>>>> Stashed changes
 name = "meta-protocol"
 version = "0.1.0"
 dependencies = [
@@ -1467,10 +1462,6 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 name = "meta-repo"
 version = "0.1.0"
 dependencies = [
