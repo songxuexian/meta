@@ -6,5 +6,4 @@ pub enum NodeError {
     NotFoundHash(String),
     #[error("Not found by height: {0}")]
     NotFoundHeight(u64),
-   
 }
