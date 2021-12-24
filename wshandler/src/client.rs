@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 use crossbeam_channel::{bounded, select, Sender, Receiver};
 
 use crate::{user::User, wall::ProtectiveWall};
-use log::{error, info, warn,debug};
+use log::{error, info, warn, debug};
 use backtrace::Backtrace;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
