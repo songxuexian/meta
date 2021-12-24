@@ -1,4 +1,4 @@
-struct User{
+pub(crate) struct User{
 	uid    : i64,
 	dev     :String,
 	user_key :String,
@@ -12,7 +12,7 @@ impl User {
          format!("{} {}", self.uid,self.dev)
     }
     
-    fn  UserKey(&self) ->String {
+    pub fn  user_key(&self) ->String {
         if self.user_key == "" {
             self.user_key = self.GetUserKey(self.uid, self.dev)
         }
