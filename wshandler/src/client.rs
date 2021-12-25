@@ -1,11 +1,13 @@
-use std::time::{Duration, Instant};
-use crossbeam_channel::{bounded, select, Sender, Receiver};
-
+use std::{time::{Duration, Instant}, fmt::Debug};
+use crossbeam_channel::{bounded, tick, select, Sender, Receiver};
+use serde::{Deserialize,Serialize};
+use uuid::Uuid;
+use std::thread;
 use crate::{user::User, wall::ProtectiveWall};
 use log::{error, info, warn, debug};
 use backtrace::Backtrace;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
-
+use axum::extract::ws::{Message, WebSocket};
 
 const WRITE_WAIT: u64  = 10 * Duration::from_secs(1).as_secs();
 const PONG_WAIT: u64 = 60 * Duration::from_secs(1).as_secs();
@@ -17,128 +19,124 @@ const MAX_SEND_CHAN_CAPACITY: u64 = MAX_SEND_CHAN + 128;
 static  PING_FRAME: ClientCMD = ClientCMD{action: "ping".to_string(), args: todo!(), client: todo!() };
 static PONG_FRAME: WSMessage = WSMessage{group: "System".to_string(),data:  "pong".to_string(), uid: todo!(),};
 
+#[derive(Debug)]
 struct ClientCMD  {
-	action : String ,
+	pub action : String ,
 	args   : Vec<String>, 
 	client : Client,
 }
 
+#[derive(Deserialize,Serialize)]
 struct WSMessage {
 	group :String,
 	uid   :i64,
 	data  :String,
 }
 
-
+#[derive(Debug)]
 struct Client  {
-	conn       :   String, //ws.Conn
+	conn       :  WebSocket, //ws.Conn
 	user       :  Option<User>,
 	disconnected : bool,
-	sender_channel : Sender<String>,
-	recv_channel : Receiver<String>,
+	sender_channel : Sender<WSMessage>,
+	recv_channel : Receiver<WSMessage>,
 	clientip  :   String,
 	wall       :  ProtectiveWall,
 }
 
 impl Client{
 
-fn UserKey(&self)-> String {
-	if let Some(user) = self.user {
-		user.user_key()
-	} else {
-		"".to_string()
+	fn set_channel(&self){
+		let (s1,r1) = bounded(MAX_MESSAGE_SIZE as usize);
+		self.sender_channel = s1.clone();
+		self.recv_channel = r1.clone();
 	}
-}
 
-fn CacheKey(&self) ->String {
-    format!("{}_{}", self.UserKey(), self.remote_addr())
-}
-
-fn SetUserInfo(&self,u :User) {
-	self.user = Some(u)
-}
-
-fn IsAuthenticated(&self)-> bool {
-	match self.user{
-		Some(user)=> true,
-		None => false,
-	}
-}
-
-fn Close(&self) {
-	if self.disconnected {
-		return
-	}
-	self.disconnected = true;
-	let bt = Backtrace::new();
-	debug!("client ip: {} , stack:{:?}",self.clientip, bt);
-	drop(self.sender_channel);
-}
-
-fn Ip(&self) ->String {
-	return self.clientip
-}
-
-fn remote_addr(&self) -> IpAddr {
-	return self.conn.RemoteAddr()
-}
-
-fn readPump(&self) {
-	defer func() {
-		self.Close()
-		if self.IsAuthenticated() {
-			ClientOffline(self)
-			offlineFunc(self.CacheKey())
+	fn UserKey(&self)-> String {
+		if let Some(user) = self.user {
+			user.user_key()
+		} else {
+			"".to_string()
 		}
-		loggers.Info.Printf("Client %s readPump closed %s", c.clientip, c.user)
-	}()
-	self.conn.SetReadLimit(MAX_MESSAGE_SIZE)
-	self.conn.SetReadDeadline(time.Now().Add(PONG_WAIT))
-	self.conn.SetPongHandler(func(string) error {
-		self.conn.SetReadDeadline(time.Now().Add(pongWait))
-		if self.IsAuthenticated() {
-			aliveFunc(c.CacheKey())
+	}
+
+	fn CacheKey(&self) ->String {
+		format!("{}_{}", self.UserKey(), self.remote_addr())
+	}
+
+	fn SetUserInfo(&self,u :User) {
+		self.user = Some(u)
+	}
+
+	fn IsAuthenticated(&self)-> bool {
+		match self.user{
+			Some(user)=> true,
+			None => false,
 		}
-		return nil
-	})
-	for {
-		let cmd  = ClientCMD{ action: todo!(), args: todo!(), client: todo!() };
-		if err = self.conn.ReadJSON(&cmd); err != nil {
-			//if ws.IsUnexpectedCloseError(err, ws.CloseGoingAway, ws.CloseAbnormalClosure) {
-			warn!("Client {} ReadJSON error {}", c.clientip, err);
-			//}
+	}
+
+	fn Close(&self) {
+		if self.disconnected {
 			return
 		}
-		let randomUUID = uuid.New();
-
-		debug!("accept message: {}, message id = {}", cmd, randomUUID.String());
-		debug!("c.sendChan={}, message id = {}", len(self.sendChan), randomUUID.String() );
-		if cmd.Action == PING_FRAME.Action {
-			debug!("respond to ping message={}, message id = %{}", PING_FRAME, randomUUID.String() );
-			PONG_FRAME.Data = fmt.Sprintf("pong+%v", randomUUID);
-			c.sendChan <- PONG_FRAME;
-			debug!("respond to ping message end, pong message:%v, message id = {}",  PONG_FRAME.Data,randomUUID.String());
-			continue
-		}
-		cmd.Client = self;
-		//debug!("Read %#v", cmd)
-		clientChan <- &cmd;
+		self.disconnected = true;
+		let bt = Backtrace::new();
+		debug!("client ip: {} , stack:{:?}",self.clientip, bt);
+		drop(self.sender_channel);
 	}
+
+	fn Ip(&self) ->String {
+		return self.clientip
+	}
+
+	fn remote_addr(&self) -> String {
+		return self.clientip
+	}
+
+
+	async fn readPump(&self) {
+		// todo need add auth ...
+		loop {
+        let cmd = self.do_socket_msg().await.unwrap();
+		//debug!("Read %#v", cmd)
+		// clientChan <- &cmd;
+    	}
+	}
+
+async fn do_socket_msg(&self) -> Option<ClientCMD>{
+	let cmd  = ClientCMD{ action: todo!(), args: todo!(), client: todo!() };
+	if let Some(msg) = self.conn.recv().await {
+        if let Ok(msg) = msg {
+			// todo parse msg to WSMessage, use json
+            println!("Client says: {:?}", msg);
+        } else {
+            println!("client disconnected");
+            return None
+        }
+    }
+
+	let random_uuid = Uuid::new_v4();
+
+	debug!("accept message: {:?}, message id = {}", cmd, random_uuid);
+	if cmd.action == PING_FRAME.action {
+		debug!("respond to ping message={:?}, message id = %{}", PING_FRAME, random_uuid );
+		PONG_FRAME.data = format!("pong+{}", random_uuid);
+		self.sender_channel.send(PONG_FRAME);
+		debug!("respond to ping message end, pong message:{}, message id = {}",  PONG_FRAME.data, random_uuid);
+	}
+	cmd.client = *self;
+	Some(cmd)
 }
 
 fn writePump(&self,ctx:context.Context) {
-	ticker = time.NewTicker(PING_PERIOD);
-	defer func() {
-		ticker.Stop();
-		self.Close();
+	let ticker = tick(Duration::from_secs(PING_PERIOD));
+	// self.Close();
 
-		info!("Client %s writePump closed %s", self.clientip, self.user);
-	}();
-	for {
-		select {
+	loop {
+		select! {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
+		ticker.recv().unwrap() -> String =>
 			if c.disconnected {
 				debug!("send message message failed");
 				return
@@ -179,13 +177,15 @@ fn SendMessage(&self,msg: String) -> bool {
 	if self.disconnected {
 		return false
 	}
-	select {
-	case self.send <- msg:
-		return true
-	default:
-		warn!("Client %s SendMessage Full", c.clientip)
-		// ToDo 主动断线
-		return false
-	}
+	thread::spawn(move || self.sender_channel.send(msg).unwrap());
+	true
+	// select!{
+	//  self.send <- msg:
+	// 	return true
+	// default:
+	// 	warn!("Client %s SendMessage Full", self.clientip)
+	// 	// ToDo 主动断线
+	// 	return false
+	// }
 }
 }

@@ -1,5 +1,6 @@
 use std::time::Instant;
 
+#[derive(Debug)]
 pub(crate) struct ProtectiveWall{
     count: i64,
     last_visit_time: Instant,

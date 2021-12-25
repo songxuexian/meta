@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub(crate) struct User{
 	uid    : i64,
 	dev     :String,
