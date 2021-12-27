@@ -1738,6 +1738,7 @@ dependencies = [
  "fast_log",
  "log 0.4.14",
  "serde",
+ "serde_json",
  "tokio",
  "uuid",
  "websocket",
