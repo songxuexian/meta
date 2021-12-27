@@ -26,7 +26,7 @@ struct ClientCMD  {
 	client : Client,
 }
 
-#[derive(Deserialize,Serialize)]
+#[derive(Deserialize,Serialize,Debug)]
 struct WSMessage {
 	group :String,
 	uid   :i64,
@@ -128,52 +128,55 @@ async fn do_socket_msg(&self) -> Option<ClientCMD>{
 	Some(cmd)
 }
 
-fn writePump(&self,ctx:context.Context) {
+async fn writePump(&self,ctx:context.Context) {
 	let ticker = tick(Duration::from_secs(PING_PERIOD));
 	// self.Close();
 
 	loop {
-		select! {
-		case <-ctx.Done():
-			return
-		ticker.recv().unwrap() -> String =>
-			if c.disconnected {
+		thread::spawn(|| {
+			ticker.recv().unwrap();
+			if self.disconnected {
 				debug!("send message message failed");
 				return
-			}
-			self.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := self.conn.WriteMessage(ws.PingMessage, nil); err != nil {
-				warn!("Client {} PingMessage error: {}", self.clientip, err);
-				return
-			}
-		case msg, ok := <-c.sendChan:
-			debug!("send message start:{}", msg);
-			if self.disconnected {
-				warn!("Client {} disconnected error: %v, failed message:{}", self.clientip, self.disconnected, msg);
-				return
-			}
-			if self.conn.SetWriteDeadline(time.Now().Add(writeWait)); !ok {
-				error!("Client {} read sendChan fail: {}", c.clientip);
-				// The hub closed the channel.
-				debug!("set write deadline failed message:%+v", msg);
-				err := c.conn.WriteMessage(ws.CloseMessage, []byte{});
-				if err != nil{
-					error!("Client {} write error:{}", c.clientip, err);
-				}
-				return
-			}
-			debug!("WriteJSON msg {}", msg)
-			if err := self.conn.WriteJSON(msg); err != nil {
-				warn!("Client {} WriteJSON error: {}", c.clientip, err);
-				return
-			}
-			debug!("send message end:{}", msg);
-		}
-	}
+			};
 
+			match self.conn.send(Message::Ping(b"PING".to_vec())).await {
+				Ok(msg) => (),
+				 Err(err) => {
+					warn!("Client {} PingMessage error: {}", self.clientip, err);
+					return 
+				 }
+			};
+		}
+	);
+	thread::spawn(|| {
+		let msg = self.recv_channel.recv();
+		match msg {
+			Ok(msg)=>{
+				debug!("send message start:{:?}", msg);
+				if self.disconnected {
+					warn!("Client {} disconnected error: {}, failed message:{:?}", self.clientip, self.disconnected, msg);
+					return
+				}
+				match self.conn.send(msg).await{
+					Ok(()) => (),
+					Err(err) => {
+						warn!("Client {} WriteJSON error: {}", self.clientip, err);
+						return
+					}
+				}
+				debug!("send message end:{:?}", msg);
+			},
+			Err(err) => {
+				warn!("Client {} WriteJSON error: {}", self.clientip, err);
+				return
+			}
+		}
+	});
+	}
 }
 
-fn SendMessage(&self,msg: String) -> bool {
+fn SendMessage(&self,msg: WSMessage) -> bool {
 	if self.disconnected {
 		return false
 	}
