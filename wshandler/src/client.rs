@@ -7,9 +7,9 @@ use serde::{Deserialize, Serialize};
 use std::thread;
 use std::{
     fmt::Debug,
-    time::{Duration},
+    time::Duration,
 };
-use serde_json::Result;
+use serde_json::json;
 use uuid::Uuid;
 
 const WRITE_WAIT: u64 = 10 * Duration::from_secs(1).as_secs();
@@ -178,8 +178,7 @@ impl Client {
                                 self.clientip, self.disconnected, msg
                             )
                         }
-						let msg_string = serde_json::to_string(&msg).unwrap();
-                        match self.conn.send(Message::Text(msg_string)).await {
+                        match self.conn.send(Message::Text(json!(&msg))).await {
                             Ok(()) => (),
                             Err(err) => {
                                 warn!("Client {} WriteJSON error: {}", self.clientip, err);
