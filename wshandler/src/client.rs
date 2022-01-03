@@ -20,7 +20,7 @@ const MAX_SEND_CHAN: u64 = 1024;
 const MAX_SEND_CHAN_CAPACITY: u64 = MAX_SEND_CHAN + 128;
 
 static PING_FRAME: ClientCMD = ClientCMD {
-    action: "ping".to_string(),
+    action: "ping".as_str(),
     args: todo!(),
     client: todo!(),
 };
@@ -30,10 +30,10 @@ static PONG_FRAME: WSMessage = WSMessage {
     uid: 0,
 };
 
-#[derive(Debug)]
+#[derive(Deserialize, Serialize,Debug)]
 struct ClientCMD {
-    pub action: String,
-    args: Vec<String>,
+    pub action: &'static str,
+    args: Vec<&'static str>,
     client: Client,
 }
 
