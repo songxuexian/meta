@@ -13,6 +13,11 @@ pub struct RegisterResponse {
     url: String,
 }
 
+#[derive(Serialize, Debug)]
+pub struct TopicsResponse {
+    topics: String,
+}
+
 #[derive(Deserialize, Debug)]
 pub struct Event {
     topic: String,
@@ -75,4 +80,16 @@ pub async fn ws_handler(ws: warp::ws::Ws, id: String, clients: Clients) -> Resul
 
 pub async fn health_handler() -> Result<impl Reply> {
     Ok(StatusCode::OK)
+}
+
+pub async fn get_client_topics(id: String, clients: Clients) -> Result<impl Reply> {
+    println!("{} connected, topic", id);
+
+    let client = clients.read().await.get(&id).cloned();
+    match client {
+        Some(c) => Ok(json(&TopicsResponse {
+            topics: c.topics.join(", "),
+        })),
+        None => Err(warp::reject::not_found()),
+    }
 }

@@ -42,6 +42,11 @@ async fn main() {
         .and(with_clients(clients.clone()))
         .and_then(handler::publish_handler);
 
+    let client_topics = warp::path("topics")
+        .and(warp::path::param())
+        .and(with_clients(clients.clone()))
+        .and_then(handler::get_client_topics);
+
     let ws_route = warp::path("ws")
         .and(warp::ws())
         .and(warp::path::param())
@@ -52,6 +57,7 @@ async fn main() {
         .or(register_routes)
         .or(ws_route)
         .or(publish)
+        .or(client_topics)
         .with(warp::cors().allow_any_origin());
 
     warp::serve(routes).run(([127, 0, 0, 1], 8000)).await;
