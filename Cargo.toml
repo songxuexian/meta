@@ -4,4 +4,6 @@ members = [
     "repo",
     "protocol",
     "node",
+    "wshandler",
+    "warpws",
 ]
