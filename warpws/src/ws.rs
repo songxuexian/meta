@@ -61,7 +61,7 @@ async fn client_msg(id: &str, msg: Message, clients: &Clients) {
         return;
     }
 
-    let topics_req: TopicsRequest = match from_str(&message) {
+    let topics_req: TopicsRequest = match from_str(message) {
         Ok(v) => v,
         Err(e) => {
             eprintln!("error while parsing message to topics request: {}", e);
