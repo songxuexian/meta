@@ -1,15 +1,13 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock};
-use warp::{ws::Message, Filter, Rejection};
+use tokio::sync::RwLock;
+use warp::{Filter, Rejection};
 
-use crate::{handler, client::Client};
-
+use crate::{client::Client, handler};
 
 pub(crate) type Result<T> = std::result::Result<T, Rejection>;
 pub(crate) type Clients = Arc<RwLock<HashMap<String, Client>>>;
-
 
 #[tokio::test]
 async fn main() {
@@ -39,7 +37,6 @@ async fn main() {
         .and(with_clients(clients.clone()))
         .and_then(handler::get_client_topics);
 
-        
     let ws_route = warp::path("ws")
         .and(warp::ws())
         .and(warp::path::param())

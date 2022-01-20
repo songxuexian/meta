@@ -1,15 +1,14 @@
+use crate::msg::WSMessage;
 use crate::{user::User, wall::ProtectiveWall};
 use axum::extract::ws::{Message, WebSocket};
 use backtrace::Backtrace;
 use crossbeam_channel::{bounded, tick, Receiver, Sender};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
-use std::thread;
-use std::{
-    fmt::Debug,
-    time::Duration,
-};
 use serde_json::json;
+use std::sync::Arc;
+use std::thread;
+use std::{fmt::Debug, time::Duration};
 use uuid::Uuid;
 
 const WRITE_WAIT: u64 = 10 * Duration::from_secs(1).as_secs();
@@ -20,28 +19,18 @@ const MAX_SEND_CHAN: u64 = 1024;
 const MAX_SEND_CHAN_CAPACITY: u64 = MAX_SEND_CHAN + 128;
 
 static PING_FRAME: ClientCMD = ClientCMD {
-    action: "ping".as_str(),
-    args: todo!(),
-    client: todo!(),
-};
-static PONG_FRAME: WSMessage = WSMessage {
-    group: "System".to_string(),
-    data: "pong".to_string(),
-    uid: 0,
+    action: String::from_utf8("ping"),
+    args: Vec::new(),
+    client: None,
 };
 
-#[derive(Deserialize, Serialize,Debug)]
-struct ClientCMD {
-    pub action: &'static str,
-    args: Vec<&'static str>,
-    client: Client,
-}
+static PONG_FRAME: WSMessage = WSMessage::new("System".to_string(), 0, "pong".to_string());
 
 #[derive(Deserialize, Serialize, Debug)]
-struct WSMessage {
-    group: String,
-    uid: i64,
-    data: String,
+struct ClientCMD{
+    pub action: String,
+    args: Vec<String>,
+    client: Arc<Client>,
 }
 
 #[derive(Debug)]
@@ -152,7 +141,7 @@ impl Client {
         // self.Close();
 
         loop {
-            thread::spawn(|| async{
+            thread::spawn(|| async {
                 ticker.recv().unwrap();
                 if self.disconnected {
                     debug!("send message message failed");
@@ -167,7 +156,7 @@ impl Client {
                     }
                 };
             });
-            thread::spawn(|| async{
+            thread::spawn(|| async {
                 let msg = self.recv_channel.recv();
                 match msg {
                     Ok(msg) => {
@@ -196,7 +185,7 @@ impl Client {
         }
     }
 
-	fn send_message(&self, msg: WSMessage) -> bool {
+    fn send_message(&self, msg: WSMessage) -> bool {
         if self.disconnected {
             return false;
         }
