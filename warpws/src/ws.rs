@@ -1,4 +1,6 @@
-use crate::server::{Client, Clients};
+use std::net::SocketAddr;
+
+use crate::{server::{Clients}, client::Client};
 use futures::{FutureExt, StreamExt};
 use serde::Deserialize;
 use serde_json::from_str;
@@ -10,7 +12,13 @@ pub struct TopicsRequest {
     topics: Vec<String>,
 }
 
-pub async fn client_connection(ws: WebSocket, id: String, clients: Clients, mut client: Client) {
+// todo how save client and webSocket 
+pub struct WSCLient{
+    pub ws :WebSocket,
+    pub client :Client
+}
+
+pub async fn client_connection(ws: WebSocket, id: String, addr: Option<SocketAddr>, clients: Clients, mut client: Client) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
     let (client_sender, client_rcv) = mpsc::unbounded_channel();
     let client_rcv = UnboundedReceiverStream::new(client_rcv); // <-- this
@@ -21,6 +29,7 @@ pub async fn client_connection(ws: WebSocket, id: String, clients: Clients, mut 
         }
     }));
 
+    client.addr = addr;
     client.sender = Some(client_sender);
     clients.write().await.insert(id.clone(), client);
 
@@ -52,7 +61,7 @@ async fn client_msg(id: &str, msg: Message, clients: &Clients) {
         return;
     }
 
-    let topics_req: TopicsRequest = match from_str(&message) {
+    let topics_req: TopicsRequest = match from_str(message) {
         Ok(v) => v,
         Err(e) => {
             eprintln!("error while parsing message to topics request: {}", e);

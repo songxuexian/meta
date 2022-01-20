@@ -4,19 +4,11 @@ use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock};
 use warp::{ws::Message, Filter, Rejection};
 
-use crate::handler;
+use crate::{handler, client::Client};
 
 
 pub(crate) type Result<T> = std::result::Result<T, Rejection>;
 pub(crate) type Clients = Arc<RwLock<HashMap<String, Client>>>;
-
-#[derive(Debug, Clone)]
-pub struct Client {
-    pub user_id: usize,
-    pub topics: Vec<String>,
-    pub sender: Option<mpsc::UnboundedSender<std::result::Result<Message, warp::Error>>>,
-}
-
 
 
 #[tokio::test]
@@ -47,9 +39,11 @@ async fn main() {
         .and(with_clients(clients.clone()))
         .and_then(handler::get_client_topics);
 
+        
     let ws_route = warp::path("ws")
         .and(warp::ws())
         .and(warp::path::param())
+        .and(warp::addr::remote())
         .and(with_clients(clients.clone()))
         .and_then(handler::ws_handler);
 
