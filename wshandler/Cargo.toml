@@ -15,6 +15,6 @@ thiserror = "1.0"
 websocket = "0.26.0"
 crossbeam-channel = "0.5"
 backtrace = "0.3"
-uuid = "0.8"
 tungstenite = { version = "0.16.0", features = ["rustls-tls-webpki-roots"] }
 url = "2.2.2"
+uuid = { version = "0.8", features = ["serde", "v4"] }
