@@ -1,5 +1,4 @@
 use std::net::SocketAddr;
-
 use crate::{
     client::Client,
     server::{self, Clients, Result},
@@ -31,7 +30,7 @@ pub struct Event {
     message: String,
 }
 
-pub async fn publish_handler(body: Event, clients: server::Clients) -> server::Result<impl Reply> {
+pub async fn publish_handler(body: Event, clients: Clients) -> Result<impl Reply> {
     clients
         .read()
         .await
