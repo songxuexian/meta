@@ -6,4 +6,6 @@ members = [
     "node",
     "wshandler",
     "warpws",
+    "learn/mastering",
+    "learn/my-redis",
 ]

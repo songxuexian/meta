@@ -133,7 +133,11 @@ impl Client {
             client_uuid: random_uuid.to_string(),
         };
         // todo! decode msg to WSMessage
-        debug!("accept message: {:?}, message id = {}", cmd, random_uuid.to_string());
+        debug!(
+            "accept message: {:?}, message id = {}",
+            cmd,
+            random_uuid.to_string()
+        );
         if cmd.action == PING_FRAME.action {
             debug!(
                 "respond to ping message={:?}, message id = %{}",
