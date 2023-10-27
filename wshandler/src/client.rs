@@ -3,11 +3,18 @@ use crate::{user::User, wall::ProtectiveWall};
 use axum::extract::ws::{Message, WebSocket};
 use backtrace::Backtrace;
 use crossbeam_channel::{bounded, tick, Receiver, Sender};
+use futures::{sink::SinkExt, stream::StreamExt};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::borrow::BorrowMut;
+use std::cell::RefCell;
+use std::ops::Deref;
+use std::sync::Arc;
 use std::thread;
+use std::time::Instant;
 use std::{fmt::Debug, time::Duration};
+use tokio::sync::{futures, oneshot};
 use uuid::Uuid;
 
 const WRITE_WAIT: u64 = 10 * Duration::from_secs(1).as_secs();
@@ -24,6 +31,10 @@ static PING_FRAME: ClientCMD = ClientCMD {
 };
 
 static PONG_FRAME: WSMessage = WSMessage::new("System", 0, "pong");
+
+trait WritePumpTrait {
+    fn write_pump(&self);
+}
 
 #[derive(Deserialize, Serialize, Debug)]
 struct ClientCMD {
@@ -45,10 +56,10 @@ struct Client {
 }
 
 impl Client {
-    fn new() -> Self {
+    fn new(socket: WebSocket) -> Self {
         let (s1, r1) = bounded(MAX_MESSAGE_SIZE as usize);
         Client {
-            conn: todo!(),
+            conn: socket,
             user: None,
             disconnected: false,
             sender_channel: s1.clone(),
@@ -154,54 +165,33 @@ impl Client {
         Some(cmd)
     }
 
-    async fn write_pump(&self) {
-        let ticker = tick(Duration::from_secs(PING_PERIOD));
-        // self.Close();
+    fn process_ticker(&self, ticker: Receiver<Instant>) -> Option<Message> {
+        ticker.recv().unwrap();
+        if self.disconnected {
+            debug!("send message message failed");
+            return None;
+        };
 
-        loop {
-            let ticker_recv = thread::spawn(|| async {
-                ticker.recv().unwrap();
+        Some(Message::Ping(b"PING".to_vec()))
+    }
+
+    fn process_channel(&self) -> Option<Message> {
+        let msg = self.recv_channel.recv();
+        match msg {
+            Ok(msg) => {
                 if self.disconnected {
-                    debug!("send message message failed");
-                    return;
-                };
-
-                match self.conn.send(Message::Ping(b"PING".to_vec())).await {
-                    Ok(msg) => (),
-                    Err(err) => {
-                        warn!("Client {} PingMessage error: {}", self.clientip, err);
-                        return;
-                    }
-                };
-            });
-            let msg_recv = thread::spawn(|| async {
-                let msg = self.recv_channel.recv();
-                match msg {
-                    Ok(msg) => {
-                        debug!("send message start:{:?}", msg);
-                        if self.disconnected {
-                            warn!(
-                                "Client {} disconnected error: {}, failed message:{:?}",
-                                self.clientip, self.disconnected, msg
-                            )
-                        }
-                        match self.conn.send(Message::Text(json!(&msg).to_string())).await {
-                            Ok(()) => (),
-                            Err(err) => {
-                                warn!("Client {} WriteJSON error: {}", self.clientip, err);
-                                return;
-                            }
-                        }
-                        debug!("send message end:{:?}", msg);
-                    }
-                    Err(err) => {
-                        warn!("Client {} WriteJSON error: {}", self.clientip, err);
-                        return;
-                    }
+                    warn!(
+                        "Client {} disconnected error: {}, failed message:{:?}",
+                        self.clientip, self.disconnected, msg
+                    );
+                    return None;
                 }
-            });
-            ticker_recv.join();
-            msg_recv.join();
+                Some(Message::Text(json!(&msg).to_string()))
+            }
+            Err(err) => {
+                warn!("Client {} WriteJSON error: {}", self.clientip, err);
+                return None;
+            }
         }
     }
 
@@ -219,5 +209,29 @@ impl Client {
         // 	// ToDo 主动断线
         // 	return false
         // }
+    }
+}
+
+async fn write_pump(client: Client, mut socket: WebSocket) {
+    let ticker = tick(Duration::from_secs(PING_PERIOD));
+    loop {
+        let ticker_new = ticker.clone();
+        let client = Arc::new(client);
+        let clinet1 = client.clone();
+        let ticker_recv = thread::spawn(|| clinet1.process_ticker(ticker_new));
+        let clinet2 = client.clone();
+        let msg_recv = thread::spawn(|| clinet2.process_channel());
+        if let Some(message) = ticker_recv.join().unwrap() {
+            match client.conn.send(message).await {
+                Ok(_) => (),
+                Err(err) => warn!("Client {} PingMessage error: {}", client.clientip, err),
+            }
+        }
+        if let Some(message) = msg_recv.join().unwrap() {
+            match client.conn.send(message).await {
+                Ok(_) => (),
+                Err(err) => warn!("Client {} WriteJSON error: {}", client.clientip, err),
+            }
+        }
     }
 }
