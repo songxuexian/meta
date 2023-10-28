@@ -1,9 +1,12 @@
-use crate::block::{Address, Block};
-use crate::block_header::ChainBlock;
 use crate::errors::ProtocolError;
 use crate::errors::ProtocolError::NetParams;
 
 // AddressParser parser node block to model block
+
+struct Address {
+    script: String,
+    address: String,
+}
 struct AddressParser {
     net_params: String,
 }
@@ -14,36 +17,18 @@ impl AddressParser {
         AddressParser { net_params }
     }
 
-    // parse parser block to model
-    fn parse(&self, block: impl ChainBlock, block_model: &mut Block) -> Result<(), ProtocolError> {
-        for tx in block.transactions() {
-            for input in tx.inputs() {
-                self.update_addresses(input.control_program().as_str(), block_model)?;
-            }
-
-            for out in tx.outputs() {
-                self.update_addresses(out.control_program().as_str(), block_model)?;
-            }
-        }
-
-        Ok(())
-    }
-
-    fn update_addresses(&self, cp: &str, block_model: &mut Block) -> Result<(), ProtocolError> {
-        let mut cps = cp;
+    fn parse(&self, cp: &str) -> Result<Address, ProtocolError> {
+        let cps = cp;
         if !is_p2wpkh_script(cps) && !is_p2wsh_script(cps) {
-            return Ok(());
+            return Err(ProtocolError::NetParams("script invalid".to_string()));
         }
 
         let address = script_to_address(cps, self.net_params.clone())?;
-        let mut script = hex::encode(&cps);
-        let address = Address {
+        let script = hex::encode(&cps);
+        Ok(Address {
             script: script.clone(),
             address,
-        };
-        block_model.addresses.insert(script, address);
-
-        Ok(())
+        })
     }
 }
 
