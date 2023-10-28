@@ -1,8 +1,4 @@
-
-use {
-    thiserror::Error,
-    url::ParseError,
-};
+use {thiserror::Error, url::ParseError};
 
 #[derive(Debug, Error)]
 pub enum ClientError {

@@ -25,7 +25,6 @@ pub struct TransactionType {
     pub updated_at: Option<rbatis::DateTimeNative>,
 }
 
-
 // pre-define tx types
 #[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Eq, Clone)]
 #[repr(u8)]
@@ -38,7 +37,3 @@ pub enum TxType {
     CrossChainTxType,
     ChainTxType,
 }
-
-
-
-

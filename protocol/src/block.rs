@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use meta_database::tx::TxType;
 use meta_database::utxo::UTXOType;
+use std::collections::HashMap;
 
 pub struct Block {
     pub header: Header,
@@ -31,7 +31,6 @@ struct Asset {
     decimal: u64,
 }
 
-
 struct Balance {
     script: String,
     asset: String,
@@ -40,14 +39,12 @@ struct Balance {
     total_sent: String,
 }
 
-
 struct Validator {
     pub_key: String,
     vote_num: i64,
     script: String,
     produced_block_count: i64,
 }
-
 
 struct Transaction {
     hash: String,
@@ -57,14 +54,12 @@ struct Transaction {
     types: Vec<TxType>,
 }
 
-
 struct AddressTransaction {
     script: String,
     asset: String,
     transaction_hash: String,
     amount: i64,
 }
-
 
 struct UTXO {
     hash: String,

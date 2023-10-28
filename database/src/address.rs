@@ -10,7 +10,6 @@ pub struct Address {
     pub updated_at: Option<rbatis::DateTimeNative>,
 }
 
-
 #[crud_table]
 #[derive(Clone, Debug)]
 pub struct AddressTransaction {
@@ -22,6 +21,3 @@ pub struct AddressTransaction {
     pub created_at: Option<rbatis::DateTimeNative>,
     pub updated_at: Option<rbatis::DateTimeNative>,
 }
-
-
-

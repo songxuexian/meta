@@ -1,7 +1,9 @@
-use web3::{Web3,transports::{self, Http}};
+use web3::{
+    transports::{self, Http},
+    Web3,
+};
 
-pub fn web3(url:&str) -> Web3<Http> {
+pub fn web3(url: &str) -> Web3<Http> {
     let transport = transports::Http::new(url).unwrap();
     Web3::new(transport)
 }
-

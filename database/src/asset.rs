@@ -14,4 +14,3 @@ pub struct Asset {
     pub created_at: Option<rbatis::DateTimeNative>,
     pub updated_at: Option<rbatis::DateTimeNative>,
 }
-

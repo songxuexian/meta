@@ -1,5 +1,5 @@
 use rbatis::crud_table;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 // pre-define tx types
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -11,7 +11,6 @@ pub enum UTXOType {
     // VoteType represent vote type
     VoteType,
 }
-
 
 #[crud_table]
 #[derive(Clone, Debug)]
@@ -31,4 +30,3 @@ pub struct Utxo {
     pub created_at: Option<rbatis::DateTimeNative>,
     pub updated_at: Option<rbatis::DateTimeNative>,
 }
-

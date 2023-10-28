@@ -1,8 +1,8 @@
-use std::net::SocketAddr;
-use crate::{server::{Clients}, client::Client};
+use crate::{client::Client, server::Clients};
 use futures::{FutureExt, StreamExt};
 use serde::Deserialize;
 use serde_json::from_str;
+use std::net::SocketAddr;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::ws::{Message, WebSocket};
@@ -11,13 +11,19 @@ pub struct TopicsRequest {
     topics: Vec<String>,
 }
 
-// todo how save client and webSocket 
-pub struct WSCLient{
-    pub ws :WebSocket,
-    pub client :Client
+// todo how save client and webSocket
+pub struct WSCLient {
+    pub ws: WebSocket,
+    pub client: Client,
 }
 
-pub async fn client_connection(ws: WebSocket, id: String, addr: Option<SocketAddr>, clients: Clients, mut client: Client) {
+pub async fn client_connection(
+    ws: WebSocket,
+    id: String,
+    addr: Option<SocketAddr>,
+    clients: Clients,
+    mut client: Client,
+) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
     let (client_sender, client_rcv) = mpsc::unbounded_channel();
     let client_rcv = UnboundedReceiverStream::new(client_rcv); // <-- this

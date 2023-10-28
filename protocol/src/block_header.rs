@@ -29,7 +29,10 @@ impl BlockHeaderParser {
             size: raw_block_byte.len() as u64,
             // convert ms to s
             timestamp: block.timestamp() / 1000,
-            raw_block: std::str::from_utf8(&raw_block_byte).unwrap().parse().unwrap(),
+            raw_block: std::str::from_utf8(&raw_block_byte)
+                .unwrap()
+                .parse()
+                .unwrap(),
         };
 
         Ok(())

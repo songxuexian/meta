@@ -1,9 +1,9 @@
-use rbatis::crud::CRUD;
-use meta_database::tx::TransactionType;
-use meta_database::tx::TxType::{VetoTxType};
 use crate::connect::connect_db;
 use crate::errors::RepoError;
 use crate::errors::RepoError::RowsAffected;
+use meta_database::tx::TransactionType;
+use meta_database::tx::TxType::VetoTxType;
+use rbatis::crud::CRUD;
 
 pub async fn save_tx_type(tx_type: &TransactionType) -> Result<(), RepoError> {
     let rb = connect_db().await;
@@ -31,6 +31,6 @@ pub async fn test_tx_type() {
     let res = save_tx_type(tx_type).await;
     match res {
         Ok(()) => println!("OK"),
-        Err(error) => println!("Problem opening the file: {:?}", error)
+        Err(error) => println!("Problem opening the file: {:?}", error),
     }
 }

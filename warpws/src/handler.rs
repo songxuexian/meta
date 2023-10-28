@@ -1,10 +1,10 @@
-use std::net::SocketAddr;
 use crate::{
     client::Client,
     server::{self, Clients, Result},
     ws,
 };
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
 use uuid::Uuid;
 use warp::{http::StatusCode, reply::json, ws::Message, Reply};
 

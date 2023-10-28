@@ -37,8 +37,7 @@ impl AddressParser {
 
         let address = script_to_address(cps, self.net_params.clone())?;
         let mut script = hex::encode(&cps);
-        let address = Address
-        {
+        let address = Address {
             script: script.clone(),
             address,
         };
@@ -48,7 +47,6 @@ impl AddressParser {
     }
 }
 
-
 pub fn script_to_address(cps: &str, net_str: String) -> Result<String, ProtocolError> {
     if net_str.is_empty() {
         return Result::Err(NetParams("not find the network".to_string()));
@@ -56,7 +54,6 @@ pub fn script_to_address(cps: &str, net_str: String) -> Result<String, ProtocolE
 
     Ok("".to_string())
 }
-
 
 pub fn is_p2wpkh_script(cp: &str) -> bool {
     false
