@@ -54,6 +54,7 @@ async fn main() {
     warp::serve(routes).run(([127, 0, 0, 1], 8000)).await;
 }
 
+#[allow(dead_code)]
 fn with_clients(clients: Clients) -> impl Filter<Extract = (Clients,), Error = Infallible> + Clone {
     warp::any().map(move || clients.clone())
 }

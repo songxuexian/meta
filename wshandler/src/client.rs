@@ -94,10 +94,10 @@ impl Client {
     }
 
     fn is_authenticated(&self) -> bool {
-        match &self.user {
-            Some(_) => true,
-            None => false,
+        if self.user.is_some() {
+            return true;
         }
+        false
     }
 
     fn close(&mut self) {
@@ -110,11 +110,11 @@ impl Client {
     }
 
     fn ip(&self) -> String {
-        return self.clientip.to_string();
+        self.clientip.to_string()
     }
 
     fn remote_addr(&self) -> String {
-        return self.ip();
+        self.ip()
     }
 
     async fn read_pump(&mut self) {
@@ -158,7 +158,7 @@ impl Client {
 
             let mut pong_frame = get_pong_frame();
             pong_frame.data = format!("pong+{}", random_uuid);
-            self.sender_channel.send(pong_frame.clone());
+            let _ = self.sender_channel.send(pong_frame.clone());
             debug!(
                 "respond to ping message end, pong message:{}, message id = {}",
                 pong_frame.data.clone(),
@@ -194,7 +194,7 @@ impl Client {
             }
             Err(err) => {
                 warn!("Client {} WriteJSON error: {}", self.clientip, err);
-                return None;
+                None
             }
         }
     }

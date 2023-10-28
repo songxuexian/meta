@@ -15,7 +15,7 @@ impl ProtectiveWall {
     }
 
     pub fn is_friendly_visit(&mut self) -> bool {
-        self.count = self.count + 1;
+        self.count += 1;
         let cur = Instant::now();
         let dis = cur - self.last_visit_time;
         // 大于等于3秒,重置

@@ -54,8 +54,8 @@ impl Node {
 
     pub async fn get_block_by_hash(&self, hash: H256) -> Result<Block<H256>, NodeError> {
         match self.web3.eth().block(BlockId::Hash(hash)).await.unwrap() {
-            Some(block) => return Ok(block),
-            None => return Err(NodeError::NotFoundHash(hash.to_string())),
+            Some(block) => Ok(block),
+            None => Err(NodeError::NotFoundHash(hash.to_string())),
         }
     }
 }
