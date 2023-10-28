@@ -3,7 +3,6 @@ use crate::{user::User, wall::ProtectiveWall};
 use axum::extract::ws::{Message, WebSocket};
 use backtrace::Backtrace;
 use crossbeam_channel::{bounded, tick, Receiver, Sender};
-use futures::{sink::SinkExt, stream::StreamExt};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -24,14 +23,17 @@ const MAX_MESSAGE_SIZE: u64 = 1024;
 const MAX_SEND_CHAN: u64 = 1024;
 const MAX_SEND_CHAN_CAPACITY: u64 = MAX_SEND_CHAN + 128;
 
-static PING_FRAME: ClientCMD = ClientCMD {
-    action: "ping".to_string(),
-    args: Vec::new(),
-    client_uuid: "".to_string(),
-};
+fn get_pong_frame() -> WSMessage {
+    WSMessage::new("System", 0, "pong")
+}
 
-static PONG_FRAME: WSMessage = WSMessage::new("System", 0, "pong");
-
+fn get_ping_frame() -> ClientCMD {
+    ClientCMD {
+        action: String::from("ping"),
+        args: Vec::new(),
+        client_uuid: "".to_string(),
+    }
+}
 trait WritePumpTrait {
     fn write_pump(&self);
 }
@@ -70,17 +72,16 @@ impl Client {
         }
     }
 
-    fn set_channel(&self) {
+    fn set_channel(&mut self) {
         let (s1, r1) = bounded(MAX_MESSAGE_SIZE as usize);
         self.sender_channel = s1.clone();
         self.recv_channel = r1.clone();
     }
 
     fn user_key(&self) -> String {
-        if let Some(user) = self.user {
-            user.user_key()
-        } else {
-            "".to_string()
+        match &self.user {
+            Some(user) => user.get_user_key().unwrap(),
+            None => "".to_string(),
         }
     }
 
@@ -88,33 +89,32 @@ impl Client {
         format!("{}_{}", self.user_key(), self.remote_addr())
     }
 
-    fn set_user_info(&self, u: User) {
+    fn set_user_info(&mut self, u: User) {
         self.user = Some(u)
     }
 
     fn is_authenticated(&self) -> bool {
-        match self.user {
-            Some(user) => true,
+        match &self.user {
+            Some(_) => true,
             None => false,
         }
     }
 
-    fn close(&self) {
+    fn close(&mut self) {
         if self.disconnected {
             return;
         }
         self.disconnected = true;
         let bt = Backtrace::new();
         debug!("client ip: {} , stack:{:?}", self.clientip, bt);
-        drop(self.sender_channel);
     }
 
     fn ip(&self) -> String {
-        return self.clientip;
+        return self.clientip.to_string();
     }
 
     fn remote_addr(&self) -> String {
-        return self.clientip;
+        return self.ip();
     }
 
     async fn read_pump(&mut self) {
@@ -138,8 +138,8 @@ impl Client {
         }
 
         let random_uuid = Uuid::new_v4();
-        let cmd = ClientCMD {
-            action: todo!(),
+        let mut cmd = ClientCMD {
+            action: "".to_string(),
             args: Vec::new(),
             client_uuid: random_uuid.to_string(),
         };
@@ -149,19 +149,23 @@ impl Client {
             cmd,
             random_uuid.to_string()
         );
-        if cmd.action == PING_FRAME.action {
+        let ping_frame = get_ping_frame();
+        if cmd.action == ping_frame.action {
             debug!(
                 "respond to ping message={:?}, message id = %{}",
-                PING_FRAME, random_uuid
+                ping_frame, random_uuid
             );
-            PONG_FRAME.data = format!("pong+{}", random_uuid);
-            self.sender_channel.send(PONG_FRAME);
+
+            let mut pong_frame = get_pong_frame();
+            pong_frame.data = format!("pong+{}", random_uuid);
+            self.sender_channel.send(pong_frame.clone());
             debug!(
                 "respond to ping message end, pong message:{}, message id = {}",
-                PONG_FRAME.data, random_uuid
+                pong_frame.data.clone(),
+                random_uuid
             );
         }
-        cmd.client_uuid = self.uuid;
+        cmd.client_uuid = self.uuid.clone();
         Some(cmd)
     }
 
@@ -212,26 +216,26 @@ impl Client {
     }
 }
 
-async fn write_pump(client: Client, mut socket: WebSocket) {
-    let ticker = tick(Duration::from_secs(PING_PERIOD));
-    loop {
-        let ticker_new = ticker.clone();
-        let client = Arc::new(client);
-        let clinet1 = client.clone();
-        let ticker_recv = thread::spawn(|| clinet1.process_ticker(ticker_new));
-        let clinet2 = client.clone();
-        let msg_recv = thread::spawn(|| clinet2.process_channel());
-        if let Some(message) = ticker_recv.join().unwrap() {
-            match client.conn.send(message).await {
-                Ok(_) => (),
-                Err(err) => warn!("Client {} PingMessage error: {}", client.clientip, err),
-            }
-        }
-        if let Some(message) = msg_recv.join().unwrap() {
-            match client.conn.send(message).await {
-                Ok(_) => (),
-                Err(err) => warn!("Client {} WriteJSON error: {}", client.clientip, err),
-            }
-        }
-    }
-}
+// async fn write_pump(client: Client, mut socket: WebSocket) {
+//     let ticker = tick(Duration::from_secs(PING_PERIOD));
+//     loop {
+//         let ticker_new = ticker.clone();
+//         let client = Arc::new(client);
+//         let clinet1 = client.clone();
+//         let ticker_recv = thread::spawn(|| clinet1.process_ticker(ticker_new));
+//         let clinet2 = client.clone();
+//         let msg_recv = thread::spawn(|| clinet2.process_channel());
+//         if let Some(message) = ticker_recv.join().unwrap() {
+//             match client.conn.send(message).await {
+//                 Ok(_) => (),
+//                 Err(err) => warn!("Client {} PingMessage error: {}", client.clientip, err),
+//             }
+//         }
+//         if let Some(message) = msg_recv.join().unwrap() {
+//             match client.conn.send(message).await {
+//                 Ok(_) => (),
+//                 Err(err) => warn!("Client {} WriteJSON error: {}", client.clientip, err),
+//             }
+//         }
+//     }
+// }
