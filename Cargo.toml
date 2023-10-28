@@ -7,4 +7,5 @@ members = [
     "warpws",
     "learn/mastering",
     "learn/my-redis",
+    "learn/my-tokio",
 ]

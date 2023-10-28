@@ -1957,6 +1957,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "my-tokio"
+version = "0.1.0"
+dependencies = [
+ "bytes 1.1.0",
+ "futures 0.3.18",
+ "mini-redis",
+ "tokio",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
