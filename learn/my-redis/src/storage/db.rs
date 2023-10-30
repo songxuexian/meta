@@ -89,6 +89,7 @@ impl KvStore for Db {
             }
         }
 
+        // drop the store lock
         drop(store);
 
         if notify {
@@ -158,5 +159,26 @@ impl SharedDb {
 
     fn is_shutdown(&self) -> bool {
         self.store.lock().unwrap().shutdown
+    }
+}
+
+#[derive(Debug)]
+pub struct DbDropGuard {
+    db: Db,
+}
+
+impl DbDropGuard {
+    pub fn new() -> DbDropGuard {
+        DbDropGuard { db: Db::new() }
+    }
+
+    pub fn db(&self) -> Db {
+        self.db.clone()
+    }
+}
+
+impl Drop for DbDropGuard {
+    fn drop(&mut self) {
+        self.db.shutdown_purge_task();
     }
 }
