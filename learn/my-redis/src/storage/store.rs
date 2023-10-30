@@ -1,10 +1,8 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    time::Instant,
-};
+use std::collections::{BTreeMap, HashMap};
 
 use bytes::Bytes;
 use tokio::sync::broadcast;
+use tokio::time::Instant;
 
 #[derive(Debug)]
 pub struct Store {
