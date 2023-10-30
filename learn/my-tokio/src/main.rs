@@ -19,6 +19,8 @@ async fn main() {
         assert!(out == "done")
     });
 
+    delay(Duration::from_secs(1)).await;
+
     my_tokio.run();
 }
 

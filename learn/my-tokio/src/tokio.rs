@@ -1,10 +1,4 @@
-use std::{
-    collections::VecDeque,
-    future::{self, Future},
-    pin::Pin,
-    sync::Arc,
-    task::Context,
-};
+use std::{future::Future, pin::Pin, sync::Arc, task::Context};
 
 use crossbeam::channel;
 use futures::{

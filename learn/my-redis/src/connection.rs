@@ -60,7 +60,7 @@ impl Connection {
             }
             Frame::Array(_) => unimplemented!(),
         }
-        self.stream.flush().await;
+        let _ = self.stream.flush().await;
         Ok(())
     }
 
