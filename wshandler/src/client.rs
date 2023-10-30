@@ -22,11 +22,11 @@ const PING_PERIOD: u64 = (PONG_WAIT * 9) / 10;
 const MAX_MESSAGE_SIZE: u64 = 1024;
 const MAX_SEND_CHAN: u64 = 1024;
 const MAX_SEND_CHAN_CAPACITY: u64 = MAX_SEND_CHAN + 128;
-
+#[allow(dead_code)]
 fn get_pong_frame() -> WSMessage {
     WSMessage::new("System", 0, "pong")
 }
-
+#[allow(dead_code)]
 fn get_ping_frame() -> ClientCMD {
     ClientCMD {
         action: String::from("ping"),
@@ -56,7 +56,7 @@ struct Client {
     clientip: String,
     wall: ProtectiveWall,
 }
-
+#[allow(dead_code)]
 impl Client {
     fn new(socket: WebSocket) -> Self {
         let (s1, r1) = bounded(MAX_MESSAGE_SIZE as usize);
@@ -120,7 +120,7 @@ impl Client {
     async fn read_pump(&mut self) {
         // todo need add auth ...
         loop {
-            let cmd = self.do_socket_msg().await.unwrap();
+            let _cmd = self.do_socket_msg().await.unwrap();
             //debug!("Read %#v", cmd)
             // clientChan <- &cmd;
         }
@@ -199,7 +199,7 @@ impl Client {
         }
     }
 
-    fn send_message(&self, msg: WSMessage) -> bool {
+    fn send_message(&self, _msg: WSMessage) -> bool {
         if self.disconnected {
             return false;
         }

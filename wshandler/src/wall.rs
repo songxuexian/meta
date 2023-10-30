@@ -7,13 +7,14 @@ pub(crate) struct ProtectiveWall {
 }
 
 impl ProtectiveWall {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         ProtectiveWall {
             count: 0,
             last_visit_time: Instant::now(),
         }
     }
-
+    #[allow(dead_code)]
     pub fn is_friendly_visit(&mut self) -> bool {
         self.count += 1;
         let cur = Instant::now();

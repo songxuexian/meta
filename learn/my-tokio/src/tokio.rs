@@ -24,7 +24,7 @@ struct Task {
 
 impl Task {
     fn schedule(self: &Arc<Self>) {
-        self.executor.send(self.clone());
+        let _ = self.executor.send(self.clone());
     }
 
     fn poll(self: Arc<Self>) {
@@ -52,10 +52,20 @@ impl ArcWake for Task {
         arc_self.schedule();
     }
 }
+
+impl Default for MyTokio {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MyTokio {
     pub fn new() -> MyTokio {
         let (sender, scheduled) = channel::unbounded();
-        MyTokio { receiver: scheduled, sender }
+        MyTokio {
+            receiver: scheduled,
+            sender,
+        }
     }
 
     pub fn swapn<F>(&self, future: F)

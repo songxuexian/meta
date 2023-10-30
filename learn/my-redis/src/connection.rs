@@ -9,6 +9,7 @@ struct Connection {
     stream: BufWriter<TcpStream>,
     buffer: BytesMut,
 }
+#[allow(dead_code)]
 impl Connection {
     pub fn new(stream: TcpStream) -> Connection {
         Connection {

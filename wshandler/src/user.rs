@@ -6,6 +6,7 @@ pub(crate) struct User {
 }
 
 impl User {
+    #[allow(dead_code)]
     pub fn get_user_key(&self) -> Option<String> {
         if self.user_key.is_some() {
             return self.user_key.clone();

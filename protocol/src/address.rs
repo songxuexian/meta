@@ -11,6 +11,7 @@ struct AddressParser {
     net_params: String,
 }
 
+#[allow(dead_code)]
 impl AddressParser {
     // new_address_parser new object
     fn new_address_parser(net_params: String) -> AddressParser {
@@ -24,7 +25,7 @@ impl AddressParser {
         }
 
         let address = script_to_address(cps, self.net_params.clone())?;
-        let script = hex::encode(&cps);
+        let script = hex::encode(cps);
         Ok(Address {
             script: script.clone(),
             address,
@@ -32,7 +33,7 @@ impl AddressParser {
     }
 }
 
-pub fn script_to_address(cps: &str, net_str: String) -> Result<String, ProtocolError> {
+pub fn script_to_address(_cps: &str, net_str: String) -> Result<String, ProtocolError> {
     if net_str.is_empty() {
         return Result::Err(NetParams("not find the network".to_string()));
     }
@@ -40,10 +41,10 @@ pub fn script_to_address(cps: &str, net_str: String) -> Result<String, ProtocolE
     Ok("".to_string())
 }
 
-pub fn is_p2wpkh_script(cp: &str) -> bool {
+pub fn is_p2wpkh_script(_cp: &str) -> bool {
     false
 }
 
-pub fn is_p2wsh_script(cp: &str) -> bool {
+pub fn is_p2wsh_script(_cp: &str) -> bool {
     false
 }
