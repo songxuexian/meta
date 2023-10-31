@@ -1,4 +1,4 @@
-use std::{collections::binary_heap::PeekMut, fmt::format, vec};
+use std::vec;
 
 use bytes::Bytes;
 use mini_redis::Frame;
@@ -15,10 +15,9 @@ impl Parse {
         let array = match frame {
             Frame::Array(array) => array,
             frame => {
-                return Err(ParseError::Parse(format!(
-                    "protocol error; expected array, got {:?}",
-                    frame
-                )));
+                return Err(ParseError::Parse(
+                    format!("protocol error; expected array, got {:?}", frame).into(),
+                ));
             }
         };
         Ok(Parse {
@@ -36,10 +35,13 @@ impl Parse {
             Frame::Bulk(data) => std::str::from_utf8(&data[..])
                 .map(|s| s.to_string())
                 .map_err(|_| ParseError::Parse("protocol error; invalid string".into())),
-            frame => Err(ParseError::Parse(format!(
-                "protocol error; expectd simple frame or bulk frame, got {:?}",
-                frame
-            ))),
+            frame => Err(ParseError::Parse(
+                format!(
+                    "protocol error; expectd simple frame or bulk frame, got {:?}",
+                    frame
+                )
+                .into(),
+            )),
         }
     }
 
@@ -47,10 +49,13 @@ impl Parse {
         match self.next()? {
             Frame::Simple(s) => Ok(Bytes::from(s.into_bytes())),
             Frame::Bulk(data) => Ok(data),
-            frame => Err(ParseError::Parse(format!(
-                "protocol error; expectd simple frame or bulk frame, got {:?}",
-                frame
-            ))),
+            frame => Err(ParseError::Parse(
+                format!(
+                    "protocol error; expectd simple frame or bulk frame, got {:?}",
+                    frame
+                )
+                .into(),
+            )),
         }
     }
 
@@ -63,10 +68,13 @@ impl Parse {
                 .ok_or_else(|| ParseError::Parse("protocol error; invalid integer".into())),
             Frame::Bulk(data) => atoi::<u64>(&data)
                 .ok_or_else(|| ParseError::Parse("protocol error; invalid integer".into())),
-            frame => Err(ParseError::Parse(format!(
-                "protocol error; expectd simple frame or bulk frame, got {:?}",
-                frame
-            ))),
+            frame => Err(ParseError::Parse(
+                format!(
+                    "protocol error; expectd simple frame or bulk frame, got {:?}",
+                    frame
+                )
+                .into(),
+            )),
         }
     }
 

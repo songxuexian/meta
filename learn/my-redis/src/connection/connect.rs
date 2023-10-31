@@ -1,9 +1,11 @@
+use crate::Result;
+
 use bytes::{Buf, BytesMut};
-use mini_redis::frame::Error::Incomplete;
-use mini_redis::{Frame, Result};
 use std::io::Cursor;
 use tokio::io::{self, AsyncWriteExt, BufWriter};
 use tokio::{io::AsyncReadExt, net::TcpStream};
+
+use super::frame::Frame;
 
 struct Connection {
     stream: BufWriter<TcpStream>,
@@ -19,11 +21,22 @@ impl Connection {
     }
     pub async fn read_frame(&mut self) -> Result<Option<Frame>> {
         loop {
+            // Attempt to parse a frame from the buffered data. If enough data
+            // has been buffered, the frame is returned.
             if let Some(frame) = self.parse_frame()? {
                 return Ok(Some(frame));
             }
 
+            // There is not enough buffered data to read a frame. Attempt to
+            // read more data from the socket.
+            //
+            // On success, the number of bytes is returned. `0` indicates "end
+            // of stream".
             if 0 == self.stream.read_buf(&mut self.buffer).await? {
+                // The remote closed the connection. For this to be a clean
+                // shutdown, there should be no data in the read buffer. If
+                // there is, this means that the peer closed the socket while
+                // sending a frame.
                 if self.buffer.is_empty() {
                     return Ok(None);
                 } else {
@@ -71,10 +84,16 @@ impl Connection {
                 let len = buf.position() as usize;
                 buf.set_position(0);
                 let frame = Frame::parse(&mut buf)?;
+                // Discard the parsed data from the read buffer.
+                //
+                // When `advance` is called on the read buffer, all of the data
+                // up to `len` is discarded. The details of how this works is
+                // left to `BytesMut`. This is often done by moving an internal
+                // cursor, but it may be done by reallocating and copying data.
                 self.buffer.advance(len);
                 Ok(Some(frame))
             }
-            Err(Incomplete) => Ok(None),
+            Err(super::error::ParseError::Incomplete) => Ok(None),
             Err(e) => Err(e.into()),
         }
     }
