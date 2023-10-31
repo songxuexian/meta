@@ -1,6 +1,8 @@
-use std::fmt::{write, Display};
+use std::fmt::Display;
 
 use bytes::Bytes;
+
+use super::parse::ParseError;
 
 #[derive(Debug, Clone)]
 pub enum Frame {
@@ -44,6 +46,22 @@ impl Display for Frame {
                 }
                 Ok(())
             }
+        }
+    }
+}
+
+impl Frame {
+    pub fn array() -> Frame {
+        Frame::Array(vec![])
+    }
+
+    pub fn push_bulk(&mut self, bytes: Bytes) -> Result<(), ParseError> {
+        match self {
+            Frame::Array(vec) => {
+                vec.push(Frame::Bulk(bytes));
+                Ok(())
+            }
+            _ => Err(ParseError::ParseArrayFrame),
         }
     }
 }
