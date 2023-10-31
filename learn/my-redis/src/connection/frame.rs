@@ -92,9 +92,11 @@ impl Frame {
             }
             b'$' => {
                 if b'-' == peek_u8(src)? {
+                    // Skip '-1\r\n'
                     skip(src, 4)
                 } else {
                     let len: usize = get_decimal(src)?.try_into()?;
+                    // skip that number of bytes + 2 (\r\n).
                     skip(src, len + 2)
                 }
             }
@@ -104,6 +106,54 @@ impl Frame {
                     Frame::check(src)?
                 }
                 Ok(())
+            }
+            _ => Err(ParseError::Unimplemented),
+        }
+    }
+
+    pub fn parse(src: &mut Cursor<&[u8]>) -> Result<Frame, ParseError> {
+        match get_u8(src)? {
+            b'+' => {
+                let line = get_line(src)?.to_vec();
+                let str = String::from_utf8(line)?;
+                Ok(Frame::Simple(str))
+            }
+            b'-' => {
+                let line = get_line(src)?.to_vec();
+                let str = String::from_utf8(line)?;
+                Ok(Frame::Error(str))
+            }
+            b':' => {
+                let len = get_decimal(src)?;
+                Ok(Frame::Integer(len))
+            }
+            b'$' => {
+                if b'-' == peek_u8(src)? {
+                    let line = get_line(src)?;
+                    if line != b"-1" {
+                        return Err("protocol error; invalid frame format".into());
+                    }
+                    Ok(Frame::Null)
+                } else {
+                    let len: usize = get_decimal(src)?.try_into()?;
+                    let n = len + 2;
+                    if src.remaining() < n {
+                        return Err(ParseError::Incomplete);
+                    }
+                    let data = Bytes::copy_from_slice(&src.chunk()[..len]);
+                    skip(src, n)?;
+                    Ok(Frame::Bulk(data))
+                }
+            }
+            b'*' => {
+                // try into is convert u64 to usize
+                let len = get_decimal(src)?.try_into()?;
+                let mut out = Vec::with_capacity(len);
+
+                for _ in 0..len {
+                    out.push(Frame::parse(src)?);
+                }
+                Ok(Frame::Array(out))
             }
             _ => Err(ParseError::Unimplemented),
         }
