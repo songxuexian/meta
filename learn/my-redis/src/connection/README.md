@@ -1,6 +1,6 @@
 # Frame
 
-use "\r\n" separator, and format and split.
+use "\r\n" separator the serialization orders and warp this command to Frame.
 
 # Parse
 
