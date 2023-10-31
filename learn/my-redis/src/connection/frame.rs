@@ -1,9 +1,8 @@
 use std::{fmt::Display, io::Cursor};
 
 use bytes::{Buf, Bytes};
-use tracing::dispatcher::get_default;
 
-use super::parse::ParseError;
+use super::error::ParseError;
 
 #[derive(Debug, Clone)]
 pub enum Frame {
