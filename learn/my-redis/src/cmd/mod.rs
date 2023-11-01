@@ -64,12 +64,12 @@ impl Command {
     ) -> Result<(), ConnectionError> {
         match self {
             Command::Get(cmd) => cmd.apply(db, dst).await,
-            Command::Set(cmd) => todo!(),
-            Command::Publish(cmd) => todo!(),
-            Command::Subscribe(cmd) => todo!(),
+            Command::Set(cmd) => cmd.apply(db, dst).await,
+            Command::Publish(cmd) => cmd.apply(db, dst).await,
+            Command::Subscribe(cmd) => cmd.apply(db, dst, shutdown).await,
             Command::Unsubscribe(_) => todo!(),
-            Command::Ping(_cmd) => todo!(),
-            Command::Unknown(cmd) => todo!(),
+            Command::Ping(cmd) => cmd.apply(dst).await,
+            Command::Unknown(cmd) => cmd.apply(db, dst).await,
         }
     }
 }
