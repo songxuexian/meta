@@ -1,6 +1,8 @@
-use std::{net::Shutdown, sync::mpsc};
+use std::sync::mpsc;
 
 use crate::{connection::connect::Connection, storage::db::Db};
+
+use super::shutdown::Shutdown;
 
 #[derive(Debug)]
 pub struct Handler {
