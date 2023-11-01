@@ -11,7 +11,10 @@ use mini_redis::{
     Connection, Frame,
 };
 use my_redis::DEFAULT_PORT;
-use tokio::net::{TcpListener, TcpStream};
+use tokio::{
+    net::{TcpListener, TcpStream},
+    signal,
+};
 
 type Db = Arc<Mutex<HashMap<String, Bytes>>>;
 type ShardedDb = Arc<Vec<Mutex<HashMap<String, Vec<u8>>>>>;
@@ -40,6 +43,7 @@ async fn main() -> Result<(), ServerError> {
         .unwrap();
     println!("Listening...");
 
+    // server::run(listener, signal::ctrl_c()).await;
     let db = Arc::new(Mutex::new(HashMap::new()));
     loop {
         let (socket, _) = listener.accept().await.unwrap();
