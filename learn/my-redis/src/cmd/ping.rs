@@ -1,3 +1,5 @@
+use std::{pin::Pin, process::Output};
+
 use bytes::Bytes;
 
 use crate::connection::{
@@ -6,6 +8,8 @@ use crate::connection::{
     frame::Frame,
     parse::Parse,
 };
+
+use super::CommandToFrame;
 
 #[derive(Debug, Default)]
 pub struct Ping {
@@ -17,14 +21,6 @@ impl Ping {
         Ping { msg }
     }
 
-    pub fn parse_frames(parse: &mut Parse) -> Result<Self, ParseError> {
-        match parse.next_string() {
-            Ok(msg) => Ok(Ping::new(Some(msg))),
-            Err(ParseError::EndOfStream) => Ok(Ping::default()),
-            Err(e) => Err(e),
-        }
-    }
-
     pub async fn apply(self, dst: &mut Connection) -> Result<(), ConnectionError> {
         let response = match self.msg {
             None => Frame::Simple("PONG".to_string()),
@@ -34,8 +30,20 @@ impl Ping {
         dst.write_frame(&response).await?;
         Ok(())
     }
+}
 
-    pub fn into_frame(self) -> Result<Frame, ParseError> {
+impl CommandToFrame for Ping {
+    type Output = Self;
+
+    fn parse_frames(parse: &mut Parse) -> Result<Self::Output, ParseError> {
+        match parse.next_string() {
+            Ok(msg) => Ok(Ping::new(Some(msg))),
+            Err(ParseError::EndOfStream) => Ok(Ping::default()),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn into_frame(self) -> Result<Frame, ParseError> {
         let mut frame = Frame::array();
         frame.push_bulk(Bytes::from("ping".as_bytes()))?;
         if let Some(msg) = self.msg {

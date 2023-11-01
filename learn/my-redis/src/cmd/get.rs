@@ -29,12 +29,6 @@ impl Get {
         &self.key
     }
 
-    pub fn parse_frames(parse: &mut Parse) -> Result<Get, ParseError> {
-        let key = parse.next_string()?;
-
-        Ok(Get::new(key))
-    }
-
     pub async fn apply(self, db: &Db, dst: &mut Connection) -> Result<(), ConnectionError> {
         let response = if let Some(value) = db.get(&self.key) {
             Frame::Bulk(value)
@@ -46,13 +40,6 @@ impl Get {
 
         dst.write_frame(&response).await?;
         Ok(())
-    }
-
-    pub fn into_frame(self) -> Result<Frame, ParseError> {
-        let mut frame = Frame::array();
-        frame.push_bulk(Bytes::from("get".as_bytes()))?;
-        frame.push_bulk(Bytes::from(self.key.into_bytes()))?;
-        Ok(frame)
     }
 }
 

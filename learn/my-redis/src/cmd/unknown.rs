@@ -19,8 +19,11 @@ impl Unknown {
     pub async fn apply(self, db: &Db, dst: &mut Connection) -> Result<(), ConnectionError> {
         Ok(())
     }
-}
 
+    pub(crate) fn get_name(&self) -> &str {
+        &self.command_name
+    }
+}
 
 impl CommandToFrame for Unknown {
     type Output = Self;

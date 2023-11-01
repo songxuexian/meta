@@ -47,7 +47,11 @@ impl Command {
 
         let command = match &command_name[..] {
             "get" => Command::Get(Get::parse_frames(&mut parse)?),
+            "set" => Command::Set(Set::parse_frames(&mut parse)?),
             "ping" => Command::Ping(Ping::parse_frames(&mut parse)?),
+            "publish" => Command::Publish(Publish::parse_frames(&mut parse)?),
+            "subscribe" => Command::Subscribe(Subscribe::parse_frames(&mut parse)?),
+            "unsubscribe" => Command::Unsubscribe(Unsubscribe::parse_frames(&mut parse)?),
             _ => return Ok(Command::Unknown(Unknown::new(command_name))),
         };
 
@@ -70,6 +74,18 @@ impl Command {
             Command::Unsubscribe(_) => todo!(),
             Command::Ping(cmd) => cmd.apply(dst).await,
             Command::Unknown(cmd) => cmd.apply(db, dst).await,
+        }
+    }
+
+    pub fn get_name(&self) -> &str {
+        match self {
+            Command::Get(_) => "get",
+            Command::Set(_) => "set",
+            Command::Publish(_) => "pub",
+            Command::Subscribe(_) => "subscribe",
+            Command::Unsubscribe(_) => "unsubscribe",
+            Command::Ping(_) => "ping",
+            Command::Unknown(cmd) => cmd.get_name(),
         }
     }
 }
