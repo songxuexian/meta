@@ -7,7 +7,8 @@ use tokio::{io::AsyncReadExt, net::TcpStream};
 
 use super::frame::Frame;
 
-struct Connection {
+#[derive(Debug)]
+pub struct Connection {
     stream: BufWriter<TcpStream>,
     buffer: BytesMut,
 }
