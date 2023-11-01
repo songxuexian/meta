@@ -1,3 +1,13 @@
+use crate::{
+    connection::{
+        connect::Connection,
+        error::{ConnectionError, ParseError},
+        frame::Frame,
+        parse::Parse,
+    },
+    storage::db::Db,
+};
+
 use self::{
     get::Get, ping::Ping, publish::Publish, set::Set, subscribe::Subscribe, unknown::Unknown,
     unsubscribe::Unsubscribe,
@@ -20,4 +30,10 @@ pub enum Command {
     Unsubscribe(Unsubscribe),
     Ping(Ping),
     Unknown(Unknown),
+}
+
+pub trait CommandToFrame {
+    type Output;
+    fn parse_frames(parse: &mut Parse) -> Result<Self::Output, ParseError>;
+    fn into_frame(self) -> Result<Frame, ParseError>;
 }

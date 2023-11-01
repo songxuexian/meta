@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use tracing::debug;
 
 use crate::{
@@ -9,6 +10,8 @@ use crate::{
     },
     storage::{db::Db, kvstore::KvStore},
 };
+
+use super::CommandToFrame;
 
 #[derive(Debug)]
 pub struct Get {
@@ -43,5 +46,29 @@ impl Get {
 
         dst.write_frame(&response).await?;
         Ok(())
+    }
+
+    pub fn into_frame(self) -> Result<Frame, ParseError> {
+        let mut frame = Frame::array();
+        frame.push_bulk(Bytes::from("get".as_bytes()))?;
+        frame.push_bulk(Bytes::from(self.key.into_bytes()))?;
+        Ok(frame)
+    }
+}
+
+impl CommandToFrame for Get {
+    type Output = Get;
+
+    fn parse_frames(parse: &mut Parse) -> Result<Self::Output, ParseError> {
+        let key = parse.next_string()?;
+
+        Ok(Get::new(key))
+    }
+
+    fn into_frame(self) -> Result<Frame, ParseError> {
+        let mut frame = Frame::array();
+        frame.push_bulk(Bytes::from("get".as_bytes()))?;
+        frame.push_bulk(Bytes::from(self.key.into_bytes()))?;
+        Ok(frame)
     }
 }
