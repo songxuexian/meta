@@ -1,10 +1,9 @@
-use crate::Result;
-
 use bytes::{Buf, BytesMut};
 use std::io::Cursor;
 use tokio::io::{self, AsyncWriteExt, BufWriter};
 use tokio::{io::AsyncReadExt, net::TcpStream};
 
+use super::error::{ConnectionError, ParseError};
 use super::frame::Frame;
 
 #[derive(Debug)]
@@ -21,7 +20,7 @@ impl Connection {
         }
     }
 
-    pub async fn read_frame(&mut self) -> Result<Option<Frame>> {
+    pub async fn read_frame(&mut self) -> Result<Option<Frame>, ConnectionError> {
         loop {
             // Attempt to parse a frame from the buffered data. If enough data
             // has been buffered, the frame is returned.
@@ -42,7 +41,7 @@ impl Connection {
                 if self.buffer.is_empty() {
                     return Ok(None);
                 } else {
-                    return Err("connection reset by peer".into());
+                    return Err(ConnectionError::Disconnect);
                 }
             }
         }
@@ -79,7 +78,7 @@ impl Connection {
         Ok(())
     }
 
-    fn parse_frame(&mut self) -> Result<Option<Frame>> {
+    fn parse_frame(&mut self) -> Result<Option<Frame>, ParseError> {
         let mut buf = Cursor::new(&self.buffer[..]);
         match Frame::check(&mut buf) {
             Ok(_) => {

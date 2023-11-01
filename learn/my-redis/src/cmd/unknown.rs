@@ -13,7 +13,7 @@ pub struct Unknown {
 }
 
 impl Unknown {
-    pub fn new(key: impl ToString) -> Unknown {
+    pub(crate) fn new(key: impl ToString) -> Unknown {
         Self {
             command_name: key.to_string(),
         }
