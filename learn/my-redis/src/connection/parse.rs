@@ -1,9 +1,9 @@
 use std::vec;
 
 use bytes::Bytes;
-use mini_redis::Frame;
 
 use super::error::ParseError;
+use super::frame::Frame;
 
 #[derive(Debug)]
 pub struct Parse {

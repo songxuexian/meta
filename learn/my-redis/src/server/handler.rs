@@ -1,9 +1,8 @@
 use std::sync::mpsc;
 
-use clap::Command;
 use tracing::debug;
 
-use crate::{connection::connect::Connection, storage::db::Db};
+use crate::{cmd::Command, connection::connect::Connection, storage::db::Db};
 
 use super::shutdown::Shutdown;
 
@@ -33,13 +32,12 @@ impl Handler {
                 }
             };
 
-            // TODO impl Command
-            // let cmd = Command::from_frame(frame)?;
+            let cmd = Command::from_frame(frame)?;
 
-            // debug!(?cmd);
+            debug!(?cmd);
 
-            // cmd.apply(&self.db, &mut self.connection, &mut self.shutdown)
-            //     .await?;
+            cmd.apply(&self.db, &mut self.connection, &mut self.shutdown)
+                .await?;
         }
 
         Ok(())
