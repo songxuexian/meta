@@ -1,49 +1,42 @@
-use std::{fmt::Display, num::TryFromIntError, string::FromUtf8Error};
+use std::io;
 
-#[derive(Debug)]
+use thiserror::Error;
+
+#[derive(Error, Debug)]
 pub enum ParseError {
+    #[error("not an array frame")]
     ParseArrayFrame,
+    #[error("not enough data is available to parse a message")]
     Incomplete,
+    #[error("unimplemented command")]
     Unimplemented,
-    Parse(crate::Error),
-    Other(crate::Error),
+    #[error("protocol error; unexpected end of stream")]
     EndOfStream,
-}
-impl From<String> for ParseError {
-    fn from(src: String) -> Self {
-        ParseError::Other(src.into())
-    }
-}
-
-impl From<&str> for ParseError {
-    fn from(src: &str) -> Self {
-        src.to_string().into()
-    }
+    #[error("invalid message encode, parse failed")]
+    Parse(String),
+    #[error(transparent)]
+    ParseInt(#[from] std::num::TryFromIntError),
+    #[error(transparent)]
+    ParseUtf8(#[from] std::string::FromUtf8Error),
 }
 
-impl From<FromUtf8Error> for ParseError {
-    fn from(_src: FromUtf8Error) -> Self {
-        "protocol errer; invalid frame format".into()
-    }
-}
+#[derive(Error, Debug)]
+pub enum ConnectionError {
+    #[error("connection reset by peer")]
+    Disconnect,
 
-impl From<TryFromIntError> for ParseError {
-    fn from(_src: TryFromIntError) -> ParseError {
-        "protocol error; invalid frame format".into()
-    }
-}
+    #[error(transparent)]
+    ParseFrame(#[from] ParseError),
 
-impl Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ParseError::ParseArrayFrame => "protocol error; unexpected parse array frame".fmt(f),
-            ParseError::Incomplete => "protocol error; unexpected incomplete".fmt(f),
-            ParseError::Unimplemented => "protocol error; unexpected unimplemented".fmt(f),
-            ParseError::Parse(err) => err.fmt(f),
-            ParseError::Other(err) => err.fmt(f),
-            ParseError::EndOfStream => "protocol error; unexpected end of stream".fmt(f),
-        }
-    }
-}
+    #[error(transparent)]
+    IoError(#[from] io::Error),
 
-impl std::error::Error for ParseError {}
+    #[error("command execute error")]
+    CommandExecute(String),
+
+    #[error("received next message failed, invalid frame type")]
+    InvalidFrameType,
+
+    #[error("invalid argument")]
+    InvalidArgument(String),
+}

@@ -130,7 +130,9 @@ impl Frame {
                 if b'-' == peek_u8(src)? {
                     let line = get_line(src)?;
                     if line != b"-1" {
-                        return Err("protocol error; invalid frame format".into());
+                        return Err(ParseError::Parse(
+                            "protocol error; invalid frame format".into(),
+                        ));
                     }
                     Ok(Frame::Null)
                 } else {
@@ -184,7 +186,8 @@ fn skip(src: &mut Cursor<&[u8]>, n: usize) -> Result<(), ParseError> {
 fn get_decimal(src: &mut Cursor<&[u8]>) -> Result<u64, ParseError> {
     use atoi::atoi;
     let line = get_line(src)?;
-    atoi::<u64>(line).ok_or_else(|| "protocol error; invalid frame format".into())
+    atoi::<u64>(line)
+        .ok_or_else(|| ParseError::Parse("protocol error; invalid frame format".into()))
 }
 
 fn get_line<'a>(src: &mut Cursor<&'a [u8]>) -> Result<&'a [u8], ParseError> {

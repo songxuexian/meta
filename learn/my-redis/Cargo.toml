@@ -15,6 +15,7 @@ clap = { version = "4.4", features = ["derive"] }
 tokio-stream = "0.1"
 tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
 dotenv = "0.15.0"
+thiserror = "1"
 
 [[example]]
 name = "hello-redis"

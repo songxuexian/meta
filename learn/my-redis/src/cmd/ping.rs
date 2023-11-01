@@ -1,6 +1,11 @@
 use bytes::Bytes;
 
-use crate::connection::{connect::Connection, error::ParseError, frame::Frame, parse::Parse};
+use crate::connection::{
+    connect::Connection,
+    error::{ConnectionError, ParseError},
+    frame::Frame,
+    parse::Parse,
+};
 
 #[derive(Debug, Default)]
 pub struct Ping {
@@ -20,7 +25,7 @@ impl Ping {
         }
     }
 
-    pub async fn apply(self, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, dst: &mut Connection) -> Result<(), ConnectionError> {
         let response = match self.msg {
             None => Frame::Simple("PONG".to_string()),
             Some(msg) => Frame::Bulk(Bytes::from(msg)),
