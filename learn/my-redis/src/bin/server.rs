@@ -10,7 +10,7 @@ use mini_redis::{
     Command::{self, Get, Set},
     Connection, Frame,
 };
-use my_redis::DEFAULT_PORT;
+use my_redis::{server, DEFAULT_PORT};
 use tokio::{
     net::{TcpListener, TcpStream},
     signal,
@@ -43,18 +43,7 @@ async fn main() -> Result<(), ServerError> {
         .unwrap();
     println!("Listening...");
 
-    // server::run(listener, signal::ctrl_c()).await;
-    let db = Arc::new(Mutex::new(HashMap::new()));
-    loop {
-        let (socket, _) = listener.accept().await.unwrap();
-        let db = db.clone();
-
-        println!("Accepted");
-        tokio::spawn(async move {
-            process(socket, db).await;
-        });
-    }
-
+    server::run(listener, signal::ctrl_c()).await;
     Ok(())
 }
 

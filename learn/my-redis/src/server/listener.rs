@@ -2,14 +2,11 @@
 // Wrap DbDropGuard
 // Shutdown gracefully
 
-use std::{
-    sync::{mpsc, Arc},
-    time::Duration,
-};
+use std::{sync::Arc, time::Duration};
 
 use tokio::{
     net::{TcpListener, TcpStream},
-    sync::{broadcast, Semaphore},
+    sync::{broadcast, mpsc, Semaphore},
     time,
 };
 use tracing::error;
