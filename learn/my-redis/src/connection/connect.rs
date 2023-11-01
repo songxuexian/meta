@@ -20,6 +20,7 @@ impl Connection {
             buffer: BytesMut::with_capacity(4096),
         }
     }
+
     pub async fn read_frame(&mut self) -> Result<Option<Frame>> {
         loop {
             // Attempt to parse a frame from the buffered data. If enough data

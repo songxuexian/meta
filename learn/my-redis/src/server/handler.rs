@@ -16,7 +16,7 @@ pub struct Handler {
 }
 
 impl Handler {
-    async fn run(&mut self) -> crate::Result<()> {
+    pub async fn run(&mut self) -> crate::Result<()> {
         while !self.shutdown.is_shutdown() {
             let maybe_frame = tokio::select! {
                 res = self.connection.read_frame() => res?,
@@ -27,7 +27,10 @@ impl Handler {
 
             let frame = match maybe_frame {
                 Some(frame) => frame,
-                None => return Ok(()),
+                None => {
+                    debug!("peer closed the socket, return");
+                    return Ok(());
+                }
             };
 
             // TODO impl Command
