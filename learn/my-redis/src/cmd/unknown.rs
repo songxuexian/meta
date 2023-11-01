@@ -1,7 +1,9 @@
+use tracing::debug;
+
 use super::CommandToFrame;
 
 use crate::{
-    connection::{connect::Connection, error::ConnectionError},
+    connection::{connect::Connection, error::ConnectionError, frame::Frame},
     storage::db::Db,
 };
 
@@ -16,27 +18,15 @@ impl Unknown {
             command_name: key.to_string(),
         }
     }
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> Result<(), ConnectionError> {
+    pub async fn apply(self, dst: &mut Connection) -> Result<(), ConnectionError> {
+        let response = Frame::Error(format!("err unknown command '{}'", self.command_name));
+        debug!("apply unknown command resp: {:?}", response);
+        dst.write_frame(&response).await?;
+
         Ok(())
     }
 
     pub(crate) fn get_name(&self) -> &str {
         &self.command_name
-    }
-}
-
-impl CommandToFrame for Unknown {
-    type Output = Self;
-
-    fn parse_frames(
-        parse: &mut crate::connection::parse::Parse,
-    ) -> Result<Self::Output, crate::connection::error::ParseError> {
-        todo!()
-    }
-
-    fn into_frame(
-        self,
-    ) -> Result<crate::connection::frame::Frame, crate::connection::error::ParseError> {
-        todo!()
     }
 }
