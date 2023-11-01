@@ -73,7 +73,7 @@ impl Command {
             Command::Subscribe(cmd) => cmd.apply(db, dst, shutdown).await,
             Command::Unsubscribe(_) => todo!(),
             Command::Ping(cmd) => cmd.apply(dst).await,
-            Command::Unknown(cmd) => cmd.apply(db, dst).await,
+            Command::Unknown(cmd) => cmd.apply(dst).await,
         }
     }
 
