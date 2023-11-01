@@ -1,6 +1,6 @@
 pub mod connection;
-pub mod storage;
 pub mod server;
+pub mod storage;
 
 pub const DEFAULT_PORT: u16 = 16379;
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
