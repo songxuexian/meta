@@ -4,19 +4,42 @@ use std::{
 };
 
 use bytes::Bytes;
+use clap::Parser;
+use dotenv::dotenv;
 use mini_redis::{
     Command::{self, Get, Set},
     Connection, Frame,
 };
+use my_redis::DEFAULT_PORT;
 use tokio::net::{TcpListener, TcpStream};
 
 type Db = Arc<Mutex<HashMap<String, Bytes>>>;
 type ShardedDb = Arc<Vec<Mutex<HashMap<String, Vec<u8>>>>>;
 
+#[derive(Debug, Parser)]
+#[clap(
+    name = "my-redis-server",
+    version,
+    author,
+    about = "A mini redis server"
+)]
+struct Cli {
+    #[clap(long)]
+    port: Option<u16>,
+}
+
+#[derive(Debug)]
+enum ServerError {}
+
 #[tokio::main]
-async fn main() {
-    let listener = TcpListener::bind("127.0.0.1:16379").await.unwrap();
+async fn main() -> Result<(), ServerError> {
+    let cli = init();
+    let port = cli.port.unwrap_or(DEFAULT_PORT);
+    let listener = TcpListener::bind(&format!("127.0.0.1:{}", port))
+        .await
+        .unwrap();
     println!("Listening...");
+
     let db = Arc::new(Mutex::new(HashMap::new()));
     loop {
         let (socket, _) = listener.accept().await.unwrap();
@@ -27,6 +50,14 @@ async fn main() {
             process(socket, db).await;
         });
     }
+
+    Ok(())
+}
+
+fn init() -> Cli {
+    dotenv().ok();
+    // logger::init();
+    Cli::parse()
 }
 
 #[allow(dead_code)]

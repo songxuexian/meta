@@ -11,7 +11,10 @@ mini-redis = "0.4"
 bytes = "1"
 tracing = "0.1"
 atoi = "2.0.0"
-
+clap = { version = "4.4", features = ["derive"] }
+tokio-stream = "0.1"
+tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
+dotenv = "0.15.0"
 
 [[example]]
 name = "hello-redis"
