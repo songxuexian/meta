@@ -2,10 +2,10 @@ use crate::{
     connection::{
         connect::Connection,
         error::{ConnectionError, ParseError},
-        frame::{self, Frame},
-        parse::{self, Parse},
+        frame::Frame,
+        parse::Parse,
     },
-    server::shutdown::{self, Shutdown},
+    server::shutdown::Shutdown,
     storage::db::Db,
 };
 

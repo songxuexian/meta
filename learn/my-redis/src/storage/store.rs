@@ -20,6 +20,12 @@ pub struct Entry {
     pub expires_at: Option<Instant>,
 }
 
+impl Default for Store {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Store {
     pub fn new() -> Store {
         Store {

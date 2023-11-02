@@ -95,7 +95,7 @@ impl Connection {
                 Ok(Some(frame))
             }
             Err(super::error::ParseError::Incomplete) => Ok(None),
-            Err(e) => Err(e.into()),
+            Err(e) => Err(e),
         }
     }
 

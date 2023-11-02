@@ -16,6 +16,13 @@ pub struct Db {
     shared: Arc<SharedDb>,
 }
 
+impl Default for Db {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+
 impl Db {
     pub fn new() -> Db {
         let shared = Arc::new(SharedDb::new());
@@ -166,6 +173,13 @@ impl SharedDb {
 pub struct DbDropGuard {
     db: Db,
 }
+
+impl Default for DbDropGuard {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 
 impl DbDropGuard {
     pub fn new() -> DbDropGuard {

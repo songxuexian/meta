@@ -70,7 +70,7 @@ impl Listener {
 
             time::sleep(Duration::from_secs(backoff)).await;
 
-            backoff << 2;
+            let _ = backoff << 2;
         }
     }
 }
