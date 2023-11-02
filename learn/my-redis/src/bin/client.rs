@@ -1,23 +1,23 @@
 use bytes::Bytes;
+use clap::{Parser, Subcommand};
+use dotenv::dotenv;
 use mini_redis::client;
+use my_redis::client::cmd::Command;
 use tokio::sync::{mpsc, oneshot};
-
-#[derive(Debug)]
-enum Command {
-    Get {
-        key: String,
-        resp: Responder<Option<Bytes>>,
-    },
-    Set {
-        key: String,
-        val: Bytes,
-        resp: Responder<()>,
-    },
-}
 
 type Responder<T> = oneshot::Sender<mini_redis::Result<T>>;
 
-#[tokio::main]
+#[derive(Parser, Debug)]
+#[clap(name = "my-redis-cli", version, author, about = "Issue Redis commands")]
+struct Cli {
+    #[clap(subcommand)]
+    command: Command,
+    #[clap(name = "hostname", long, default_value = "127.0.0.1")]
+    host: String,
+    port: u16,
+}
+
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
     let (tx, mut rx) = mpsc::channel(32);
     let tx2 = tx.clone();
@@ -38,8 +38,8 @@ async fn main() {
         let (resp_tx, resp_rx) = oneshot::channel();
         let cmd = Command::Set {
             key: "foo".to_string(),
-            val: "bar".into(),
-            resp: resp_tx,
+            value: "bar".into(),
+            expires: resp_tx,
         };
 
         tx2.send(cmd).await.unwrap();

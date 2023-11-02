@@ -21,3 +21,11 @@ async-stream = "0.3.0"
 [[example]]
 name = "hello-redis"
 path = "examples/hello-redis.rs"
+
+[[bin]]
+name = "my-redis-cli"
+path = "src/bin/client.rs"
+
+[[bin]]
+name = "my-redis-server"
+path = "src/bin/server.rs"
