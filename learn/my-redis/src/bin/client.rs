@@ -3,6 +3,7 @@ use dotenv::dotenv;
 use my_redis::{
     client::{self, cmd::Command, error::ClientError},
     connection::error::ConnectionError,
+    logger,
 };
 use tracing::debug;
 
@@ -19,6 +20,7 @@ struct Cli {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), ClientError> {
     dotenv().ok();
+    logger::init();
     let cli = Cli::parse();
 
     debug!(cause = ?cli, "get cli" );
