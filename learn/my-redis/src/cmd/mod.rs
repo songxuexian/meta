@@ -14,13 +14,13 @@ use self::{
     unsubscribe::Unsubscribe,
 };
 
-mod get;
+pub mod get;
 pub mod ping;
-mod publish;
-mod set;
-mod subscribe;
-mod unknown;
-mod unsubscribe;
+pub mod publish;
+pub mod set;
+pub mod subscribe;
+pub mod unknown;
+pub mod unsubscribe;
 
 #[derive(Debug)]
 pub enum Command {
