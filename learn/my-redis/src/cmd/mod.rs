@@ -15,7 +15,7 @@ use self::{
 };
 
 mod get;
-mod ping;
+pub mod ping;
 mod publish;
 mod set;
 mod subscribe;

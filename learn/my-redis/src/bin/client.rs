@@ -1,11 +1,10 @@
-use bytes::Bytes;
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use dotenv::dotenv;
-use mini_redis::client;
-use my_redis::client::cmd::Command;
-use tokio::sync::{mpsc, oneshot};
-
-type Responder<T> = oneshot::Sender<mini_redis::Result<T>>;
+use my_redis::{
+    client::{self, cmd::Command, error::ClientError},
+    connection::error::ConnectionError,
+};
+use tracing::debug;
 
 #[derive(Parser, Debug)]
 #[clap(name = "my-redis-cli", version, author, about = "Issue Redis commands")]
@@ -18,55 +17,73 @@ struct Cli {
 }
 
 #[tokio::main(flavor = "current_thread")]
-async fn main() {
-    let (tx, mut rx) = mpsc::channel(32);
-    let tx2 = tx.clone();
+async fn main() -> Result<(), ClientError> {
+    dotenv().ok();
+    let cli = Cli::parse();
 
-    let t1 = tokio::spawn(async move {
-        let (resp_tx, resp_rx) = oneshot::channel();
-        let cmd = Command::Get {
-            key: "hello".to_string(),
-            resp: resp_tx,
-        };
-        tx.send(cmd).await.unwrap();
+    debug!(cause = ?cli, "get cli" );
 
-        let res = resp_rx.await;
-        println!("GOT = {:?}", res);
-    });
+    let addr = format!("{}:{}", cli.host, cli.port);
 
-    let t2 = tokio::spawn(async move {
-        let (resp_tx, resp_rx) = oneshot::channel();
-        let cmd = Command::Set {
-            key: "foo".to_string(),
-            value: "bar".into(),
-            expires: resp_tx,
-        };
+    let mut client = client::connect(&addr).await?;
 
-        tx2.send(cmd).await.unwrap();
-
-        let res = resp_rx.await;
-        println!("GOT = {:?}", res);
-    });
-
-    let manager = tokio::spawn(async move {
-        let mut client = client::connect("127.0.0.1:16379").await.unwrap();
-
-        while let Some(cmd) = rx.recv().await {
-            use Command::*;
-            match cmd {
-                Get { key, resp } => {
-                    let res = client.get(&key).await;
-                    let _ = resp.send(res);
-                }
-                Set { key, val, resp } => {
-                    let res = client.set(&key, val).await;
-                    let _ = resp.send(res);
-                }
+    match cli.command {
+        Command::Ping { msg } => {
+            let value = client.ping(msg).await?;
+            if let Ok(tmp) = std::str::from_utf8(&value) {
+                println!("\"{}\"", tmp);
+            } else {
+                println!("{:?}", value);
             }
         }
-    });
+        Command::Get { key } => {
+            if let Some(value) = client.get(&key).await? {
+                if let Ok(string) = std::str::from_utf8(&value) {
+                    println!("\"{}\"", string);
+                } else {
+                    println!("{:?}", value);
+                }
+            } else {
+                println!("(nil)");
+            }
+        }
+        Command::Set {
+            key,
+            value,
+            expires: None,
+        } => {
+            client.set(&key, value).await?;
+            println!("OK");
+        }
+        Command::Set {
+            key,
+            value,
+            expires: Some(expires),
+        } => {
+            client.set(&key, value, expires).await?;
+            println!("OK");
+        }
+        Command::Publish { channel, message } => {
+            client.publish(&channel, message).await?;
+            println!("Publish OK");
+        }
+        Command::Subscribe { channels } => {
+            if channels.is_empty() {
+                return Err(
+                    ConnectionError::InvalidArgument("channel(s) must be provided".into()).into(),
+                );
+            }
+            let mut subscriber = client.subscribe(channels).await?;
 
-    t1.await.unwrap();
-    t2.await.unwrap();
-    manager.await.unwrap();
+            // await messages on channels
+            while let Some(msg) = subscriber.next_message().await? {
+                println!(
+                    "got message from the channel: {}; message = {:?}",
+                    msg.channel, msg.content
+                );
+            }
+        }
+    }
+
+    Ok(())
 }
