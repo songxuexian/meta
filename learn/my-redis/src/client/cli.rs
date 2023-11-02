@@ -8,6 +8,8 @@ use crate::{
     connection::{connect::Connection, error::ConnectionError, frame::Frame},
 };
 
+use super::subscriber::Subscriber;
+
 pub struct Client {
     pub connection: Connection,
 }
@@ -69,8 +71,17 @@ impl Client {
         }
     }
 
-    pub async fn subscribe(&mut self, channels: Vec<String>) -> Result<Subscribe, ConnectionError> {
-        let frame = Subscribe::new(&channels).into_frame()?;
+    pub async fn subscribe(mut self, channels: Vec<String>) -> Result<Subscriber, ConnectionError> {
+        self.subscribe_cmd(&channels).await?;
+
+        Ok(Subscriber {
+            client: self,
+            subscribed_channels: channels,
+        })
+    }
+
+    pub async fn subscribe_cmd(&mut self, channels: &[String]) -> Result<(), ConnectionError> {
+        let frame = Subscribe::new(channels).into_frame()?;
         self.connection.write_frame(&frame).await?;
 
         for channel in channels {
@@ -97,7 +108,7 @@ impl Client {
             }
         }
 
-        Ok(Subscribe { channels })
+        Ok(())
     }
 
     pub async fn read_response(&mut self) -> Result<Frame, ConnectionError> {

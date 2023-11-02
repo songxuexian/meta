@@ -60,7 +60,7 @@ async fn main() -> Result<(), ClientError> {
             value,
             expires: Some(expires),
         } => {
-            client.set(&key, value, expires).await?;
+            client.set_expires(&key, value, expires).await?;
             println!("OK");
         }
         Command::Publish { channel, message } => {
