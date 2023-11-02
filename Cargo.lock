@@ -1531,7 +1531,6 @@ dependencies = [
  "clap 4.4.7",
  "dotenv",
  "log 0.4.20",
- "mini-redis",
  "thiserror",
  "tokio",
  "tokio-stream",

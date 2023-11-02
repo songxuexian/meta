@@ -1,6 +1,6 @@
 use crate::{
     client::Client,
-    server::{self, Clients, Result},
+    server::{Clients, Result},
     ws,
 };
 use serde::{Deserialize, Serialize};

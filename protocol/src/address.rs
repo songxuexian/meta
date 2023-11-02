@@ -3,9 +3,19 @@ use crate::errors::ProtocolError::NetParams;
 
 // AddressParser parser node block to model block
 
-struct Address {
+pub struct Address {
     script: String,
     address: String,
+}
+
+impl Address {
+    pub fn script(&mut self) -> &str {
+        self.script.as_ref()
+    }
+
+    pub fn address(&self) -> &str {
+        self.address.as_ref()
+    }
 }
 struct AddressParser {
     net_params: String,

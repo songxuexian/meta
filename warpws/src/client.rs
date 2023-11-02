@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use tokio::sync::mpsc;
-use warp::ws::{Message, WebSocket};
+use warp::ws::Message;
 
 #[derive(Debug, Clone)]
 pub struct Client {

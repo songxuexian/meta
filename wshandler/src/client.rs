@@ -2,7 +2,7 @@ use crate::msg::WSMessage;
 use crate::{user::User, wall::ProtectiveWall};
 use axum::extract::ws::{Message, WebSocket};
 use backtrace::Backtrace;
-use crossbeam_channel::{bounded, tick, Receiver, Sender};
+use crossbeam_channel::{bounded, Receiver, Sender};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -21,7 +21,7 @@ const PONG_WAIT: u64 = 60 * Duration::from_secs(1).as_secs();
 const PING_PERIOD: u64 = (PONG_WAIT * 9) / 10;
 const MAX_MESSAGE_SIZE: u64 = 1024;
 const MAX_SEND_CHAN: u64 = 1024;
-const MAX_SEND_CHAN_CAPACITY: u64 = MAX_SEND_CHAN + 128;
+static MAX_SEND_CHAN_CAPACITY: u64 = MAX_SEND_CHAN + 128;
 #[allow(dead_code)]
 fn get_pong_frame() -> WSMessage {
     WSMessage::new("System", 0, "pong")
